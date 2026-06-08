@@ -162,4 +162,18 @@
       position: relative;
     }
   }
+
+  // RGG gamification "Earned Badges" widget (ProfileBadges plugin, rendered in the
+  // additional-profile-fields slot): match the look of the other profile sections
+  // -- a bordered box with a section-sized heading.
+  .rgg-profile-badges {
+    padding: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+  }
 }
