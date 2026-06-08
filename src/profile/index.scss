@@ -169,6 +169,8 @@
   .rgg-profile-badges {
     padding: 15px;
     border: 1px solid #e5e7eb;
+    // Thicker left accent bar, matching the other profile section cards.
+    border-left: 8px solid #f2f7f8;
     border-radius: 8px;
 
     h2 {
