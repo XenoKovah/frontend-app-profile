@@ -7,6 +7,7 @@ import { ensureConfig, getConfig } from '@edx/frontend-platform';
 import { AppContext } from '@edx/frontend-platform/react';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import { Alert, Hyperlink } from '@openedx/paragon';
+import { PluginSlot } from '@openedx/frontend-plugin-framework';
 
 // Actions
 import {
@@ -289,6 +290,9 @@ class ProfilePage extends React.Component {
                 {...commonFormProps}
               />
             )}
+            <div className="mb-4">
+              <PluginSlot id="org.openedx.frontend.profile.additional_profile_fields.v1" />
+            </div>
           </div>
           <div className="pt-md-3 col-md-8 col-lg-7 offset-lg-1">
             {!this.isYOBDisabled() && this.renderAgeMessage()}
