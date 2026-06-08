@@ -18,12 +18,12 @@ const defaultProps = {
   formId: 'socialLinks',
   socialLinks: [
     {
-      platform: 'facebook',
-      socialLink: 'https://www.facebook.com/aloha',
+      platform: 'twitter',
+      socialLink: 'https://x.com/ALOHA',
     },
     {
-      platform: 'twitter',
-      socialLink: 'https://www.twitter.com/ALOHA',
+      platform: 'linkedin',
+      socialLink: 'https://www.linkedin.com/in/aloha',
     },
   ],
   drafts: {},
@@ -147,8 +147,8 @@ describe('<SocialLinks />', () => {
         openHandler={openHandler}
       />,
     );
-    const addFacebookButton = screen.getByRole('button', { name: 'Add Facebook' });
-    fireEvent.click(addFacebookButton);
+    const addBlogButton = screen.getByRole('button', { name: 'Add Blog' });
+    fireEvent.click(addBlogButton);
 
     expect(openHandler).toHaveBeenCalledTimes(1);
   });

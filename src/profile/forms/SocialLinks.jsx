@@ -3,7 +3,10 @@ import PropTypes from 'prop-types';
 import { Alert } from '@openedx/paragon';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTwitter, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
+import {
+  faXTwitter, faLinkedin, faBluesky, faDiscord,
+} from '@fortawesome/free-brands-svg-icons';
+import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import classNames from 'classnames';
 
@@ -19,26 +22,61 @@ import SwitchContent from './elements/SwitchContent';
 import { editableFormSelector } from '../data/selectors';
 
 const platformDisplayInfo = {
-  facebook: {
-    icon: faFacebook,
-    name: 'Facebook',
-  },
   twitter: {
-    icon: faTwitter,
-    name: 'Twitter',
+    icon: faXTwitter,
+    name: 'X',
   },
   linkedin: {
     icon: faLinkedin,
     name: 'LinkedIn',
   },
+  bluesky: {
+    icon: faBluesky,
+    name: 'Bluesky',
+  },
+  discord: {
+    icon: faDiscord,
+    name: 'Discord',
+  },
+  blog: {
+    icon: faGlobe,
+    name: 'Blog',
+  },
 };
 
-const SocialLink = ({ url, name, platform }) => (
-  <a href={url} className="font-weight-bold">
-    <FontAwesomeIcon className="mr-2" icon={platformDisplayInfo[platform].icon} />
-    {name}
-  </a>
-);
+// Defense in depth: the backend only stores validated http(s) links, but the
+// profile MFE must never turn a profile-supplied value into a clickable link
+// unless it is clearly an http(s) URL. Otherwise a stored javascript:/data:
+// value could run script against whoever (including staff) clicks it.
+const isSafeHttpUrl = (value) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  // Drop the whitespace/control chars browsers ignore when resolving a scheme.
+  const cleaned = Array.from(value)
+    .filter((ch) => ch.charCodeAt(0) > 0x20 && ch.charCodeAt(0) !== 0x7f)
+    .join('')
+    .toLowerCase();
+  return cleaned.startsWith('http://') || cleaned.startsWith('https://');
+};
+
+const SocialLink = ({ url, name, platform }) => {
+  const platformInfo = platformDisplayInfo[platform];
+  const icon = platformInfo
+    ? <FontAwesomeIcon className="mr-2" icon={platformInfo.icon} />
+    : null;
+
+  if (!isSafeHttpUrl(url)) {
+    return <span className="font-weight-bold">{icon}{name}</span>;
+  }
+
+  return (
+    <a href={url} className="font-weight-bold" rel="nofollow noopener noreferrer ugc">
+      {icon}
+      {name}
+    </a>
+  );
+};
 
 SocialLink.propTypes = {
   url: PropTypes.string.isRequired,
@@ -181,7 +219,7 @@ class SocialLinks extends React.Component {
   }
 
   mergeWithDrafts(newSocialLink) {
-    const knownPlatforms = ['twitter', 'facebook', 'linkedin'];
+    const knownPlatforms = ['twitter', 'linkedin', 'bluesky', 'discord', 'blog'];
     const updated = [];
     knownPlatforms.forEach((platform) => {
       if (newSocialLink.platform === platform) {
