@@ -4,7 +4,7 @@ import { Alert } from '@openedx/paragon';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faXTwitter, faLinkedin, faBluesky, faDiscord,
+  faXTwitter, faLinkedin, faBluesky, faDiscord, faGithub, faGitlab,
 } from '@fortawesome/free-brands-svg-icons';
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
@@ -29,6 +29,14 @@ const platformDisplayInfo = {
   linkedin: {
     icon: faLinkedin,
     name: 'LinkedIn',
+  },
+  github: {
+    icon: faGithub,
+    name: 'GitHub',
+  },
+  gitlab: {
+    icon: faGitlab,
+    name: 'GitLab',
   },
   bluesky: {
     icon: faBluesky,
@@ -219,7 +227,7 @@ class SocialLinks extends React.Component {
   }
 
   mergeWithDrafts(newSocialLink) {
-    const knownPlatforms = ['twitter', 'linkedin', 'bluesky', 'discord', 'blog'];
+    const knownPlatforms = ['twitter', 'linkedin', 'github', 'gitlab', 'bluesky', 'discord', 'blog'];
     const updated = [];
     knownPlatforms.forEach((platform) => {
       if (newSocialLink.platform === platform) {

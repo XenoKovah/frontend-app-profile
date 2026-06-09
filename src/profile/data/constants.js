@@ -17,6 +17,12 @@ const SOCIAL = {
   linkedin: {
     title: 'LinkedIn',
   },
+  github: {
+    title: 'GitHub',
+  },
+  gitlab: {
+    title: 'GitLab',
+  },
   bluesky: {
     title: 'Bluesky',
   },

@@ -201,7 +201,7 @@ export const formSocialLinksSelector = createSelector(
   socialLinksByPlatformSelector,
   draftSocialLinksByPlatformSelector,
   (linksByPlatform, draftLinksByPlatform) => {
-    const knownPlatforms = ['twitter', 'linkedin', 'bluesky', 'discord', 'blog'];
+    const knownPlatforms = ['twitter', 'linkedin', 'github', 'gitlab', 'bluesky', 'discord', 'blog'];
     const socialLinks = [];
     // For each known platform
     knownPlatforms.forEach((platform) => {
