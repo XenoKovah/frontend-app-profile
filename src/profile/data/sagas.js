@@ -33,6 +33,17 @@ import {
 import { handleSaveProfileSelector, userAccountSelector } from './selectors';
 import * as ProfileApiService from './services';
 
+// Maps a profile form id to the visibility-preference draft key it controls.
+const VISIBILITY_DRAFT_KEY_BY_FORM_ID = {
+  bio: 'visibilityBio',
+  courseCertificates: 'visibilityCourseCertificates',
+  country: 'visibilityCountry',
+  levelOfEducation: 'visibilityLevelOfEducation',
+  languageProficiencies: 'visibilityLanguageProficiencies',
+  name: 'visibilityName',
+  socialLinks: 'visibilitySocialLinks',
+};
+
 export function* handleFetchProfile(action) {
   const { username } = action.payload;
   const userAccount = yield select(userAccountSelector);
@@ -128,6 +139,20 @@ export function* handleSaveProfile(action) {
       'visibilityName',
       'visibilitySocialLinks',
     ]);
+
+    // The visibility <select> doesn't fire onChange when the user re-picks the value
+    // already shown (an unset visibility.<field> is displayed as its effective default,
+    // e.g. "Everyone"), so the saved form may carry no visibility draft even though the
+    // user expects that value persisted. Persist the edited form's effective visibility so
+    // "what you see is saved". Skip private accounts so we never silently un-private one.
+    const visibilityKey = VISIBILITY_DRAFT_KEY_BY_FORM_ID[action.payload.formId];
+    if (
+      visibilityKey
+      && preferencesDrafts[visibilityKey] === undefined
+      && preferences.accountPrivacy !== 'private'
+    ) {
+      preferencesDrafts[visibilityKey] = preferences[visibilityKey] || 'all_users';
+    }
 
     if (Object.keys(preferencesDrafts).length > 0) {
       preferencesDrafts.accountPrivacy = 'custom';

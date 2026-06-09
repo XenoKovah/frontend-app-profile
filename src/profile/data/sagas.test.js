@@ -14,6 +14,7 @@ import { handleSaveProfileSelector, userAccountSelector } from './selectors';
 jest.mock('./services', () => ({
   getProfile: jest.fn(),
   patchProfile: jest.fn(),
+  patchPreferences: jest.fn(),
   postProfilePhoto: jest.fn(),
   deleteProfilePhoto: jest.fn(),
   getPreferences: jest.fn(),
@@ -141,6 +142,52 @@ describe('RootSaga', () => {
       expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
       expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
       expect(gen.next().value).toBeUndefined();
+    });
+
+    it('persists the edited form visibility from its effective value when left unchanged', () => {
+      // Repro of the "Everyone shows but doesn't save" bug: the user opens the Name form,
+      // leaves the visibility at its displayed default (so no draft is recorded), and saves.
+      const action = profileActions.saveProfile('name', 'my username');
+      const gen = handleSaveProfile(action);
+      const nameSelectorData = {
+        username: 'my username',
+        drafts: {}, // visibility <select> didn't fire onChange -> no draft
+        preferences: { accountPrivacy: 'custom' }, // visibility.name is unset
+      };
+      const updatedPreferences = { accountPrivacy: 'custom', visibilityName: 'all_users' };
+
+      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
+      expect(gen.next(nameSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
+      // No account drafts, but the name form's visibility is persisted from its effective value.
+      expect(gen.next().value).toEqual(call(ProfileApiService.patchPreferences, 'my username', {
+        visibilityName: 'all_users',
+        accountPrivacy: 'custom',
+      }));
+      expect(gen.next().value).toEqual(call(ProfileApiService.getPreferences, 'my username'));
+      expect(gen.next(updatedPreferences).value)
+        .toEqual(put(profileActions.saveProfileSuccess(null, updatedPreferences)));
+      expect(gen.next().value).toEqual(delay(1000));
+      expect(gen.next().value).toEqual(put(profileActions.closeForm('name')));
+      expect(gen.next().value).toEqual(delay(300));
+      expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
+      expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
+      expect(gen.next().value).toBeUndefined();
+    });
+
+    it('does not change visibility for a private account on save', () => {
+      const action = profileActions.saveProfile('name', 'my username');
+      const gen = handleSaveProfile(action);
+      const privateSelectorData = {
+        username: 'my username',
+        drafts: {},
+        preferences: { accountPrivacy: 'private' },
+      };
+
+      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
+      // Private account: no visibility is forced and no preferences patch happens.
+      expect(gen.next(privateSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
+      expect(gen.next().value)
+        .toEqual(put(profileActions.saveProfileSuccess(null, { accountPrivacy: 'private' })));
     });
 
     it('should successfully publish a failure action on exception', () => {
