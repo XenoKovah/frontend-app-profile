@@ -47,7 +47,11 @@ const VISIBILITY_DRAFT_KEY_BY_FORM_ID = {
 export function* handleFetchProfile(action) {
   const { username } = action.payload;
   const userAccount = yield select(userAccountSelector);
-  const isAuthenticatedUserProfile = username === getAuthenticatedUser().username;
+  const isOwnProfile = username === getAuthenticatedUser().username;
+  // Preview mode renders your own profile exactly as another logged-in user
+  // sees it; on someone else's profile the normal visitor view already is that.
+  const isPreview = Boolean(action.payload.isPreview) && isOwnProfile;
+  const isAuthenticatedUserProfile = isOwnProfile && !isPreview;
   // Default our data assuming the account is the current user's account.
   let preferences = {};
   let account = userAccount;
@@ -58,23 +62,38 @@ export function* handleFetchProfile(action) {
 
     // Depending on which profile we're loading, we need to make different calls.
     const calls = [
-      call(ProfileApiService.getAccount, username),
+      isPreview
+        ? call(ProfileApiService.getAccount, username, { sharedView: true })
+        : call(ProfileApiService.getAccount, username),
       call(ProfileApiService.getCourseCertificates, username),
     ];
 
-    if (isAuthenticatedUserProfile) {
+    if (isAuthenticatedUserProfile || isPreview) {
       // If the profile is for the current user, get their preferences.
-      // We don't need them for other users.
+      // We don't need them for other users. In preview mode they are only
+      // used below to decide certificate visibility, never rendered.
       calls.push(call(ProfileApiService.getPreferences, username));
     }
 
     // Make all the calls in parallel.
     const result = yield all(calls);
 
-    if (isAuthenticatedUserProfile) {
+    if (isAuthenticatedUserProfile || isPreview) {
       [account, courseCertificates, preferences] = result;
     } else {
       [account, courseCertificates] = result;
+    }
+
+    if (isPreview) {
+      // The certificates API only exposes another user's certificates when
+      // visibility.course_certificates is explicitly all_users
+      // (IsOwnerOrPublicCertificates in edx-platform); mirror that check here
+      // so the preview shows the certificate list a visitor would get.
+      if (preferences.visibilityCourseCertificates !== 'all_users') {
+        courseCertificates = [];
+      }
+      // Visitors cannot read preferences, so render with the same empty set.
+      preferences = {};
     }
 
     // Set initial visibility values for account

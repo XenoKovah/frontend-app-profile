@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import { sendTrackingLogEvent } from '@edx/frontend-platform/analytics';
 import { ensureConfig, getConfig } from '@edx/frontend-platform';
@@ -65,7 +66,7 @@ class ProfilePage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.fetchProfile(this.props.params.username);
+    this.props.fetchProfile(this.props.params.username, this.props.isPreview);
     sendTrackingLogEvent('edx.profile.viewed', {
       username: this.props.params.username,
     });
@@ -103,8 +104,18 @@ class ProfilePage extends React.Component {
     return isAgeOrNotCompliant && getConfig().COLLECT_YEAR_OF_BIRTH !== 'true';
   }
 
-  isAuthenticatedUserProfile() {
+  isOwnProfile() {
     return this.props.params.username === this.context.authenticatedUser.username;
+  }
+
+  // In preview mode the page renders your own profile as a visitor would see
+  // it, so everything keyed off "is this my profile" must behave as "no".
+  isAuthenticatedUserProfile() {
+    return !this.props.isPreview && this.isOwnProfile();
+  }
+
+  isPreviewingOwnProfile() {
+    return this.props.isPreview && this.isOwnProfile();
   }
 
   // Inserted into the DOM in two places (for responsive layout)
@@ -117,6 +128,38 @@ class ProfilePage extends React.Component {
       <Hyperlink className="btn btn-primary" destination={this.state.viewMyRecordsUrl} target="_blank">
         {this.props.intl.formatMessage(messages['profile.viewMyRecords'])}
       </Hyperlink>
+    );
+  }
+
+  // Inserted into the DOM in two places (for responsive layout)
+  renderViewPublicProfileButton() {
+    if (!this.isAuthenticatedUserProfile()) {
+      return null;
+    }
+
+    return (
+      <Link className="btn btn-outline-primary" to={`/u/${this.props.params.username}/preview`}>
+        {this.props.intl.formatMessage(messages['profile.preview.button'])}
+      </Link>
+    );
+  }
+
+  renderPreviewBanner() {
+    if (!this.isPreviewingOwnProfile()) {
+      return null;
+    }
+
+    return (
+      <div className="container-fluid pt-3">
+        <Alert variant="info" className="mb-0">
+          <div className="d-flex align-items-center flex-wrap">
+            <span>{this.props.intl.formatMessage(messages['profile.preview.banner'])}</span>
+            <Link className="btn btn-primary btn-sm ml-auto flex-shrink-0" to={`/u/${this.props.params.username}`}>
+              {this.props.intl.formatMessage(messages['profile.preview.exit'])}
+            </Link>
+          </div>
+        </Alert>
+      </div>
     );
   }
 
@@ -237,6 +280,8 @@ class ProfilePage extends React.Component {
             </div>
             <div className="d-none d-md-block float-right">
               {this.renderViewMyRecordsButton()}
+              {' '}
+              {this.renderViewPublicProfileButton()}
             </div>
           </div>
         </div>
@@ -248,6 +293,8 @@ class ProfilePage extends React.Component {
             </div>
             <div className="d-md-none mb-4">
               {this.renderViewMyRecordsButton()}
+              {' '}
+              {this.renderViewPublicProfileButton()}
             </div>
             {isNameBlockVisible && (
               <Name
@@ -329,6 +376,7 @@ class ProfilePage extends React.Component {
     return (
       <div className="profile-page">
         <Banner />
+        {this.renderPreviewBanner()}
         {this.renderContent()}
       </div>
     );
@@ -413,6 +461,7 @@ ProfilePage.propTypes = {
   params: PropTypes.shape({
     username: PropTypes.string.isRequired,
   }).isRequired,
+  isPreview: PropTypes.bool,
 
   // i18n
   intl: intlShape.isRequired,
@@ -436,6 +485,7 @@ ProfilePage.defaultProps = {
   courseCertificates: null,
   requiresParentalConsent: null,
   dateJoined: null,
+  isPreview: false,
 };
 
 export default connect(

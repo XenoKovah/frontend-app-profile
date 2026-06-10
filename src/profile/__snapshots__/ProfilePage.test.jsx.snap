@@ -177,6 +177,13 @@ exports[`<ProfilePage /> Renders correctly in various states successfully redire
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -271,6 +278,13 @@ exports[`<ProfilePage /> Renders correctly in various states successfully redire
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -799,6 +813,13 @@ exports[`<ProfilePage /> Renders correctly in various states test country edit w
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -871,6 +892,13 @@ exports[`<ProfilePage /> Renders correctly in various states test country edit w
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -3007,6 +3035,13 @@ exports[`<ProfilePage /> Renders correctly in various states test education edit
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -3079,6 +3114,13 @@ exports[`<ProfilePage /> Renders correctly in various states test education edit
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -4014,6 +4056,13 @@ exports[`<ProfilePage /> Renders correctly in various states test preferreded la
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -4086,6 +4135,13 @@ exports[`<ProfilePage /> Renders correctly in various states test preferreded la
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -5908,6 +5964,13 @@ exports[`<ProfilePage /> Renders correctly in various states viewing other profi
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -6008,6 +6071,13 @@ exports[`<ProfilePage /> Renders correctly in various states viewing other profi
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -6305,6 +6375,13 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -6377,6 +6454,13 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -7058,6 +7142,219 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
 </div>
 `;
 
+exports[`<ProfilePage /> Renders correctly in various states viewing own profile in public preview mode 1`] = `
+<div>
+  <div
+    class="profile-page"
+  >
+    <div
+      class="profile-page-bg-banner bg-primary d-md-block p-relative"
+    />
+    <div
+      class="container-fluid pt-3"
+    >
+      <div
+        class="fade alert-content mb-0 alert alert-info show"
+        role="alert"
+      >
+        <div
+          class="pgn__alert-message-wrapper"
+        >
+          <div
+            class="alert-message-content"
+          >
+            <div
+              class="d-flex align-items-center flex-wrap"
+            >
+              <span>
+                This is how your profile appears to other signed-in users.
+              </span>
+              <a
+                class="btn btn-primary btn-sm ml-auto flex-shrink-0"
+                href="/u/staff"
+              >
+                Exit preview
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="container-fluid"
+    >
+      <div
+        class="row align-items-center pt-4 mb-4 pt-md-0 mb-md-0"
+      >
+        <div
+          class="col-auto col-md-4 col-lg-3"
+        >
+          <div
+            class="d-flex align-items-center d-md-block"
+          >
+            <div
+              class="profile-avatar-wrap position-relative"
+            >
+              <div
+                class="profile-avatar rounded-circle bg-light"
+              >
+                <div
+                  aria-hidden="true"
+                  class="text-muted"
+                  data-testid="IconMock"
+                  focusable="false"
+                  role="img"
+                  viewbox="0 0 24 24"
+                />
+              </div>
+              <form
+                enctype="multipart/form-data"
+              >
+                <input
+                  accept=".jpg, .jpeg, .png"
+                  class="d-none form-control-file"
+                  id="photo-file"
+                  name="file"
+                  type="file"
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+        <div
+          class="col"
+        >
+          <div
+            class="d-md-none"
+          >
+            <span
+              data-hj-suppress="true"
+            >
+              <h1
+                class="h2 mb-0 font-weight-bold text-truncate"
+              >
+                staff
+              </h1>
+              <p
+                class="mb-0"
+              >
+                Member since 
+                2017
+              </p>
+              <div
+                class="d-flex align-items-center mt-3 mb-2rem"
+              >
+                <span
+                  class="pgn__icon icon-visibility-off"
+                >
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    focusable="false"
+                    height="24"
+                    role="img"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24ZM3.42 2.45 2.01 3.87l2.68 2.68A11.738 11.738 0 0 0 1 11.5C2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l3.43 3.43 1.41-1.41L3.42 2.45ZM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07L14.14 16c-.65.32-1.37.5-2.14.5Zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <div
+                  class="username-description"
+                >
+                  Your profile information is only visible to you. Only your username is visible to others on localhost.
+                </div>
+              </div>
+              <hr
+                class="d-none d-md-block"
+              />
+            </span>
+          </div>
+          <div
+            class="d-none d-md-block float-right"
+          >
+             
+          </div>
+        </div>
+      </div>
+      <div
+        class="row"
+      >
+        <div
+          class="col-md-4 col-lg-4"
+        >
+          <div
+            class="d-none d-md-block mb-4"
+          >
+            <span
+              data-hj-suppress="true"
+            >
+              <h1
+                class="h2 mb-0 font-weight-bold text-truncate"
+              >
+                staff
+              </h1>
+              <p
+                class="mb-0"
+              >
+                Member since 
+                2017
+              </p>
+              <div
+                class="d-flex align-items-center mt-3 mb-2rem"
+              >
+                <span
+                  class="pgn__icon icon-visibility-off"
+                >
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    focusable="false"
+                    height="24"
+                    role="img"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24ZM3.42 2.45 2.01 3.87l2.68 2.68A11.738 11.738 0 0 0 1 11.5C2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l3.43 3.43 1.41-1.41L3.42 2.45ZM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07L14.14 16c-.65.32-1.37.5-2.14.5Zm2.97-5.33a2.97 2.97 0 0 0-2.64-2.64l2.64 2.64Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <div
+                  class="username-description"
+                >
+                  Your profile information is only visible to you. Only your username is visible to others on localhost.
+                </div>
+              </div>
+              <hr
+                class="d-none d-md-block"
+              />
+            </span>
+          </div>
+          <div
+            class="d-md-none mb-4"
+          >
+             
+          </div>
+          <div
+            class="mb-4"
+          />
+        </div>
+        <div
+          class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`<ProfilePage /> Renders correctly in various states while saving an edited bio 1`] = `
 <div>
   <div
@@ -7190,6 +7487,13 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -7262,6 +7566,13 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -8139,6 +8450,13 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                 </span>
               </span>
             </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
           </div>
         </div>
       </div>
@@ -8211,6 +8529,13 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                   </span>
                 </span>
               </span>
+            </a>
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
             </a>
           </div>
           <div
@@ -9056,7 +9381,15 @@ exports[`<ProfilePage /> Renders correctly in various states without credentials
           </div>
           <div
             class="d-none d-md-block float-right"
-          />
+          >
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
+          </div>
         </div>
       </div>
       <div
@@ -9089,7 +9422,15 @@ exports[`<ProfilePage /> Renders correctly in various states without credentials
           </div>
           <div
             class="d-md-none mb-4"
-          />
+          >
+             
+            <a
+              class="btn btn-outline-primary"
+              href="/u/staff/preview"
+            >
+              View what public sees
+            </a>
+          </div>
           <div
             class="pgn-transition-replace-group position-relative mb-5"
           >

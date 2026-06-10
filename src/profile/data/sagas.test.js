@@ -110,6 +110,92 @@ describe('RootSaga', () => {
       expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
       expect(gen.next().value).toBeUndefined();
     });
+
+    it('should fetch the shared view of the own profile when previewing', () => {
+      const userAccount = {
+        username: 'gonzo',
+        other: 'data',
+      };
+      getAuthenticatedUser.mockReturnValue(userAccount);
+      const selectorData = {
+        userAccount,
+      };
+
+      const action = profileActions.fetchProfile('gonzo', true);
+      const gen = handleFetchProfile(action);
+
+      const sharedAccount = { username: 'gonzo', bio: 'shared bio' };
+      const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'all_users' }];
+
+      expect(gen.next().value).toEqual(select(userAccountSelector));
+      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
+      expect(gen.next().value).toEqual(all([
+        call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
+        call(ProfileApiService.getCourseCertificates, 'gonzo'),
+        call(ProfileApiService.getPreferences, 'gonzo'),
+      ]));
+      // Renders as a visitor: empty preferences, isAuthenticatedUserProfile false.
+      expect(gen.next(result).value)
+        .toEqual(put(profileActions.fetchProfileSuccess(sharedAccount, {}, [1, 2, 3], false)));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
+      expect(gen.next().value).toBeUndefined();
+    });
+
+    it('should hide certificates in preview when they are not visible to everyone', () => {
+      const userAccount = {
+        username: 'gonzo',
+        other: 'data',
+      };
+      getAuthenticatedUser.mockReturnValue(userAccount);
+      const selectorData = {
+        userAccount,
+      };
+
+      const action = profileActions.fetchProfile('gonzo', true);
+      const gen = handleFetchProfile(action);
+
+      const sharedAccount = { username: 'gonzo' };
+      const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'private' }];
+
+      expect(gen.next().value).toEqual(select(userAccountSelector));
+      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
+      expect(gen.next().value).toEqual(all([
+        call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
+        call(ProfileApiService.getCourseCertificates, 'gonzo'),
+        call(ProfileApiService.getPreferences, 'gonzo'),
+      ]));
+      expect(gen.next(result).value)
+        .toEqual(put(profileActions.fetchProfileSuccess(sharedAccount, {}, [], false)));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
+      expect(gen.next().value).toBeUndefined();
+    });
+
+    it('should ignore preview mode on another user\'s profile', () => {
+      const userAccount = {
+        username: 'gonzo',
+        other: 'data',
+      };
+      getAuthenticatedUser.mockReturnValue(userAccount);
+      const selectorData = {
+        userAccount,
+      };
+
+      const action = profileActions.fetchProfile('booyah', true);
+      const gen = handleFetchProfile(action);
+
+      const result = [{}, [1, 2, 3]];
+
+      expect(gen.next().value).toEqual(select(userAccountSelector));
+      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
+      expect(gen.next().value).toEqual(all([
+        call(ProfileApiService.getAccount, 'booyah'),
+        call(ProfileApiService.getCourseCertificates, 'booyah'),
+      ]));
+      expect(gen.next(result).value)
+        .toEqual(put(profileActions.fetchProfileSuccess(result[0], {}, result[1], false)));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
+      expect(gen.next().value).toBeUndefined();
+    });
   });
 
   describe('handleSaveProfile', () => {
