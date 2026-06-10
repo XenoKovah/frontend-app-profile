@@ -547,6 +547,9 @@ exports[`<ProfilePage /> Renders correctly in various states successfully redire
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -2630,6 +2633,9 @@ exports[`<ProfilePage /> Renders correctly in various states test country edit w
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -3216,7 +3222,12 @@ exports[`<ProfilePage /> Renders correctly in various states test education edit
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -3629,6 +3640,9 @@ exports[`<ProfilePage /> Renders correctly in various states test education edit
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -4215,7 +4229,12 @@ exports[`<ProfilePage /> Renders correctly in various states test preferreded la
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -5503,6 +5522,9 @@ exports[`<ProfilePage /> Renders correctly in various states test preferreded la
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -6096,6 +6118,9 @@ exports[`<ProfilePage /> Renders correctly in various states viewing other profi
               />
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -6495,7 +6520,12 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -6786,6 +6816,9 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -7372,7 +7405,12 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -7663,6 +7701,9 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -8313,7 +8354,12 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -8604,6 +8650,9 @@ exports[`<ProfilePage /> Renders correctly in various states while saving an edi
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
@@ -9182,7 +9231,12 @@ exports[`<ProfilePage /> Renders correctly in various states without credentials
                 class="h5"
                 data-hj-suppress="true"
               >
-                Montenegro
+                <a
+                  href="http://localhost:18000/gamma_dashboard/leaderboard/country/ME"
+                  title="View the Montenegro leaderboard"
+                >
+                  Montenegro
+                </a>
               </p>
             </div>
           </div>
@@ -9473,6 +9527,9 @@ exports[`<ProfilePage /> Renders correctly in various states without credentials
               </ul>
             </div>
           </div>
+          <div
+            class="mb-4"
+          />
         </div>
         <div
           class="pt-md-3 col-md-8 col-lg-7 offset-lg-1"
