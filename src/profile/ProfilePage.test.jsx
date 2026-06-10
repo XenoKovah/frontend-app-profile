@@ -3,7 +3,7 @@ import { getConfig } from '@edx/frontend-platform';
 import * as analytics from '@edx/frontend-platform/analytics';
 import { AppContext } from '@edx/frontend-platform/react';
 import { configure as configureI18n, IntlProvider } from '@edx/frontend-platform/i18n';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
@@ -67,7 +67,7 @@ beforeEach(() => {
   analytics.sendTrackingLogEvent.mockReset();
 });
 
-const ProfileWrapper = ({ params, requiresParentalConsent }) => {
+const ProfileWrapper = ({ params, requiresParentalConsent, isPreview }) => {
   const navigate = useNavigate();
   return (
     <ProfilePage
@@ -75,6 +75,7 @@ const ProfileWrapper = ({ params, requiresParentalConsent }) => {
       params={params}
       requiresParentalConsent={requiresParentalConsent}
       navigate={navigate}
+      isPreview={isPreview}
     />
   );
 };
@@ -82,10 +83,11 @@ const ProfileWrapper = ({ params, requiresParentalConsent }) => {
 ProfileWrapper.propTypes = {
   params: PropTypes.shape({}).isRequired,
   requiresParentalConsent: PropTypes.bool.isRequired,
+  isPreview: PropTypes.bool.isRequired,
 };
 
 const ProfilePageWrapper = ({
-  contextValue, store, params, requiresParentalConsent,
+  contextValue, store, params, requiresParentalConsent, isPreview,
 }) => (
   <AppContext.Provider
     value={contextValue}
@@ -96,6 +98,7 @@ const ProfilePageWrapper = ({
           <ProfileWrapper
             params={params}
             requiresParentalConsent={requiresParentalConsent}
+            isPreview={isPreview}
           />
         </BrowserRouter>
       </Provider>
@@ -106,6 +109,7 @@ const ProfilePageWrapper = ({
 ProfilePageWrapper.defaultProps = {
   params: { username: 'staff' },
   requiresParentalConsent: null,
+  isPreview: false,
 };
 
 ProfilePageWrapper.propTypes = {
@@ -113,6 +117,7 @@ ProfilePageWrapper.propTypes = {
   store: PropTypes.shape({}).isRequired,
   params: PropTypes.shape({}),
   requiresParentalConsent: PropTypes.bool,
+  isPreview: PropTypes.bool,
 };
 
 describe('<ProfilePage />', () => {
@@ -179,6 +184,57 @@ describe('<ProfilePage />', () => {
       );
       const { container: tree } = render(component);
       expect(tree).toMatchSnapshot();
+    });
+
+    it('viewing own profile in public preview mode', () => {
+      const contextValue = {
+        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
+        config: getConfig(),
+      };
+      // Preview renders with visitor-shaped redux state (the saga stores the
+      // shared account data and isAuthenticatedUserProfile: false).
+      const component = (
+        <ProfilePageWrapper
+          contextValue={contextValue}
+          store={mockStore(storeMocks.viewOtherProfile)}
+          isPreview
+        />
+      );
+      const { container: tree } = render(component);
+      expect(tree).toMatchSnapshot();
+    });
+
+    it('preview mode shows the exit banner and hides owner controls', () => {
+      const contextValue = {
+        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
+        config: getConfig(),
+      };
+      const { container } = render(
+        <ProfilePageWrapper
+          contextValue={contextValue}
+          store={mockStore(storeMocks.viewOtherProfile)}
+          isPreview
+        />,
+      );
+
+      expect(screen.getByText('This is how your profile appears to other signed-in users.')).toBeTruthy();
+      expect(container.querySelector('a[href="/u/staff"]')).toBeTruthy();
+      expect(container.querySelector('a[href="/u/staff/preview"]')).toBeNull();
+    });
+
+    it('own profile shows the public preview button', () => {
+      const contextValue = {
+        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
+        config: getConfig(),
+      };
+      const { container } = render(
+        <ProfilePageWrapper
+          contextValue={contextValue}
+          store={mockStore(storeMocks.viewOwnProfile)}
+        />,
+      );
+
+      expect(container.querySelector('a[href="/u/staff/preview"]')).toBeTruthy();
     });
 
     it('while saving an edited bio', () => {

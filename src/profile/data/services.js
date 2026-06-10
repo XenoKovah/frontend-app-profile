@@ -20,8 +20,11 @@ function processAndThrowError(error, errorDataProcessor) {
 }
 
 // GET ACCOUNT
-export async function getAccount(username) {
-  const { data } = await getHttpClient().get(`${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`);
+export async function getAccount(username, { sharedView = false } = {}) {
+  // view=shared makes the accounts API return only the fields other logged-in
+  // users can see, even when requesting your own account.
+  const query = sharedView ? '?view=shared' : '';
+  const { data } = await getHttpClient().get(`${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}${query}`);
 
   // Process response data
   return processAccountData(data);
