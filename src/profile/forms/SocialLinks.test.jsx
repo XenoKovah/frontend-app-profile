@@ -138,19 +138,47 @@ describe('<SocialLinks />', () => {
     expect(closeHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('calls social links with static', () => {
+  it('shows an Add button per platform in empty mode and opens the editor', () => {
+    // formId="goals" resolves to the "empty" mode with this store (the account
+    // has no goals and it is not the field being edited).
     const openHandler = jest.fn();
     render(
       <SocialLinksWrapper
         {...defaultProps}
         formId="goals"
         openHandler={openHandler}
+        socialLinks={[
+          ...defaultProps.socialLinks,
+          // The page-level selector pads unset platforms with null stubs.
+          { platform: 'blog', socialLink: null },
+        ]}
       />,
     );
-    const addBlogButton = screen.getByRole('button', { name: 'Add Blog' });
-    fireEvent.click(addBlogButton);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Add Blog' }));
     expect(openHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders only the set links in static mode, without add buttons', () => {
+    // Static mode is how other users see the profile (isAuthenticatedUserProfile
+    // false): set links render read-only and unset platforms show no "Add ..."
+    // buttons (those belong to the empty and editing states).
+    const staticStore = JSON.parse(JSON.stringify(savingEditedBio));
+    staticStore.profilePage.isAuthenticatedUserProfile = false;
+    render(
+      <SocialLinksWrapper
+        {...defaultProps}
+        store={mockStore(staticStore)}
+        socialLinks={[
+          ...defaultProps.socialLinks,
+          { platform: 'blog', socialLink: null },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'https://x.com/ALOHA' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'https://www.linkedin.com/in/aloha' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Add / })).not.toBeInTheDocument();
   });
 
   it('calls social links with error', () => {
