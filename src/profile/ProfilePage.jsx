@@ -150,7 +150,7 @@ class ProfilePage extends React.Component {
     }
 
     return (
-      <div className="container-fluid pt-3">
+      <div className="profile-preview-banner container-fluid pt-3">
         <Alert variant="info" className="mb-0">
           <div className="d-flex align-items-center flex-wrap">
             <span>{this.props.intl.formatMessage(messages['profile.preview.banner'])}</span>

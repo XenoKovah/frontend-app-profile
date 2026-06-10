@@ -217,7 +217,12 @@ describe('<ProfilePage />', () => {
         />,
       );
 
-      expect(screen.getByText('This is how your profile appears to other signed-in users.')).toBeTruthy();
+      expect(
+        screen.getByText('This is a preview of how your profile appears to other signed-in users.'),
+      ).toBeTruthy();
+      // Guard against the react-intl "<unknown>" token that appears when a
+      // message references a placeholder/tag with no matching value.
+      expect(screen.queryByText(/<unknown>/)).toBeNull();
       expect(container.querySelector('a[href="/u/staff"]')).toBeTruthy();
       expect(container.querySelector('a[href="/u/staff/preview"]')).toBeNull();
     });

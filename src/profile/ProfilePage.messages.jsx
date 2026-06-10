@@ -18,7 +18,11 @@ const messages = defineMessages({
   },
   'profile.preview.banner': {
     id: 'profile.preview.banner',
-    defaultMessage: 'This is how your profile appears to other signed-in users.',
+    // Keep this a plain, self-contained string: no ICU placeholders ({foo})
+    // and no rich-text tags (<b>...</b>). Either of those requires a matching
+    // `values` entry at the call site, and a missing one makes react-intl
+    // render the literal token "<unknown>" in place of the missing piece.
+    defaultMessage: 'This is a preview of how your profile appears to other signed-in users.',
     description: 'Banner shown while previewing your own profile as other users see it',
   },
   'profile.preview.exit': {
