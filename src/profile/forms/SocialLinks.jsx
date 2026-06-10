@@ -4,7 +4,7 @@ import { Alert } from '@openedx/paragon';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faXTwitter, faLinkedin, faBluesky, faDiscord, faGithub, faGitlab,
+  faXTwitter, faLinkedin, faBluesky, faDiscord, faGithub, faGitlab, faMastodon,
 } from '@fortawesome/free-brands-svg-icons';
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
@@ -22,9 +22,9 @@ import SwitchContent from './elements/SwitchContent';
 import { editableFormSelector } from '../data/selectors';
 
 const platformDisplayInfo = {
-  twitter: {
-    icon: faXTwitter,
-    name: 'X',
+  blog: {
+    icon: faGlobe,
+    name: 'Blog',
   },
   linkedin: {
     icon: faLinkedin,
@@ -38,17 +38,21 @@ const platformDisplayInfo = {
     icon: faGitlab,
     name: 'GitLab',
   },
+  mastodon: {
+    icon: faMastodon,
+    name: 'Mastodon',
+  },
   bluesky: {
     icon: faBluesky,
     name: 'Bluesky',
   },
+  twitter: {
+    icon: faXTwitter,
+    name: 'X',
+  },
   discord: {
     icon: faDiscord,
     name: 'Discord',
-  },
-  blog: {
-    icon: faGlobe,
-    name: 'Blog',
   },
 };
 
@@ -79,9 +83,9 @@ const SocialLink = ({ url, name, platform }) => {
   }
 
   return (
-    <a href={url} className="font-weight-bold" rel="nofollow noopener noreferrer ugc">
+    <a href={url} className="font-weight-bold text-break" rel="nofollow noopener noreferrer ugc">
       {icon}
-      {name}
+      {url}
     </a>
   );
 };
@@ -227,7 +231,7 @@ class SocialLinks extends React.Component {
   }
 
   mergeWithDrafts(newSocialLink) {
-    const knownPlatforms = ['twitter', 'linkedin', 'github', 'gitlab', 'bluesky', 'discord', 'blog'];
+    const knownPlatforms = ['blog', 'linkedin', 'github', 'gitlab', 'mastodon', 'bluesky', 'twitter', 'discord'];
     const updated = [];
     knownPlatforms.forEach((platform) => {
       if (newSocialLink.platform === platform) {

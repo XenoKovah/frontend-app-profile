@@ -11,8 +11,8 @@ const EDUCATION_LEVELS = [
 ];
 
 const SOCIAL = {
-  twitter: {
-    title: 'X',
+  blog: {
+    title: 'Blog',
   },
   linkedin: {
     title: 'LinkedIn',
@@ -23,14 +23,17 @@ const SOCIAL = {
   gitlab: {
     title: 'GitLab',
   },
+  mastodon: {
+    title: 'Mastodon',
+  },
   bluesky: {
     title: 'Bluesky',
   },
+  twitter: {
+    title: 'X',
+  },
   discord: {
     title: 'Discord',
-  },
-  blog: {
-    title: 'Blog',
   },
 };
 
