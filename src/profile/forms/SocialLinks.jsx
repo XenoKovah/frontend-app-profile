@@ -272,7 +272,9 @@ class SocialLinks extends React.Component {
               <EditableItemHeader
                 content={intl.formatMessage(messages['profile.sociallinks.social.links'])}
               />
-              <ul className="list-unstyled">
+              {/* social-links-static opts this multi-value list out of the stock
+                  "show only the first <li>" rule -- see profile/index.scss */}
+              <ul className="list-unstyled social-links-static">
                 {socialLinks
                   .filter(({ socialLink }) => Boolean(socialLink))
                   .map(({ platform, socialLink }) => (

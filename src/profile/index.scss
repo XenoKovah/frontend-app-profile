@@ -62,6 +62,17 @@
     }
   }
 
+  // The stock profile-form list styling collapses each read-only field's list
+  // to just its first <li> (`.editable-item-header + .list-unstyled li { display:none }`
+  // plus `li:first-child { display:block }`), so single-value static fields
+  // (Name, Country, ...) show only their one value. Social links are
+  // multi-value, so on the read-only / public-preview ("what the public sees")
+  // view that rule would hide every social link except the first. Re-show all
+  // of them. (`!important` is needed to beat the stock non-important display:none.)
+  .social-links-static li {
+    display: block !important;
+  }
+
   .edit-section-header {
     @extend .h6;
     display: block;
