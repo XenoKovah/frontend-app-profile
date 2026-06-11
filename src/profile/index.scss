@@ -47,14 +47,19 @@
 
 .profile-page {
   // The public-preview banner sits between the colored header banner and the
-  // content row. The avatar in that row uses a negative top margin to overlap
-  // the colored banner (see .profile-avatar-wrap below), and because it is
-  // positioned and comes later in the DOM it would otherwise paint on top of
-  // this banner and hide its text. Give the banner its own stacking context
-  // above the avatar so the avatar tucks behind its lower edge instead.
+  // content row. The avatar in that row uses a negative top margin to overlap the
+  // colored banner (see .profile-avatar-wrap below). Rather than letting a
+  // full-width banner sit on top of the avatar, keep it compact and right-aligned
+  // (the markup adds `d-flex justify-content-end`) so it shares the row beside the
+  // avatar instead of covering it. The stacking context keeps it above the banner.
   .profile-preview-banner {
     position: relative;
     z-index: 2;
+
+    .alert {
+      width: fit-content;   // only as wide as the preview text + Exit button
+      max-width: 100%;      // wrap within the viewport on narrow screens
+    }
   }
 
   .edit-section-header {

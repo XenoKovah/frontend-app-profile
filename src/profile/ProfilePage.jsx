@@ -150,11 +150,11 @@ class ProfilePage extends React.Component {
     }
 
     return (
-      <div className="profile-preview-banner container-fluid pt-3">
+      <div className="profile-preview-banner container-fluid pt-3 d-flex justify-content-end">
         <Alert variant="info" className="mb-0">
           <div className="d-flex align-items-center flex-wrap">
             <span>{this.props.intl.formatMessage(messages['profile.preview.banner'])}</span>
-            <Link className="btn btn-primary btn-sm ml-auto flex-shrink-0" to={`/u/${this.props.params.username}`}>
+            <Link className="btn btn-primary btn-sm ml-3 flex-shrink-0" to={`/u/${this.props.params.username}`}>
               {this.props.intl.formatMessage(messages['profile.preview.exit'])}
             </Link>
           </div>
