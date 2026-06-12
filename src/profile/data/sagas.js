@@ -1,137 +1,57 @@
-import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
-import pick from 'lodash.pick';
 import {
   all,
   call,
-  delay,
   put,
-  select,
   takeEvery,
 } from 'redux-saga/effects';
 import {
-  closeForm,
-  deleteProfilePhotoBegin,
-  deleteProfilePhotoReset,
-  deleteProfilePhotoSuccess,
-  DELETE_PROFILE_PHOTO,
   fetchProfileBegin,
+  fetchProfileFailure,
   fetchProfileReset,
   fetchProfileSuccess,
   FETCH_PROFILE,
-  resetDrafts,
-  saveProfileBegin,
-  saveProfileFailure,
-  saveProfilePhotoBegin,
-  saveProfilePhotoFailure,
-  saveProfilePhotoReset,
-  saveProfilePhotoSuccess,
-  saveProfileReset,
-  saveProfileSuccess,
-  SAVE_PROFILE,
-  SAVE_PROFILE_PHOTO,
 } from './actions';
-import { handleSaveProfileSelector, userAccountSelector } from './selectors';
 import * as ProfileApiService from './services';
-
-// Maps a profile form id to the visibility-preference draft key it controls.
-const VISIBILITY_DRAFT_KEY_BY_FORM_ID = {
-  bio: 'visibilityBio',
-  // The certificates form is rendered with formId="certificates" (see ProfilePage),
-  // not "courseCertificates" — keep this key in sync or the "persist what you see on
-  // Save" behavior below never fires for certificate visibility, leaving
-  // visibility.course_certificates unset and the certs hidden from other users.
-  certificates: 'visibilityCourseCertificates',
-  country: 'visibilityCountry',
-  levelOfEducation: 'visibilityLevelOfEducation',
-  languageProficiencies: 'visibilityLanguageProficiencies',
-  name: 'visibilityName',
-  socialLinks: 'visibilitySocialLinks',
-};
 
 export function* handleFetchProfile(action) {
   const { username } = action.payload;
-  const userAccount = yield select(userAccountSelector);
-  const isOwnProfile = username === getAuthenticatedUser().username;
-  // Preview mode renders your own profile exactly as another logged-in user
-  // sees it; on someone else's profile the normal visitor view already is that.
-  const isPreview = Boolean(action.payload.isPreview) && isOwnProfile;
-  const isAuthenticatedUserProfile = isOwnProfile && !isPreview;
-  // Default our data assuming the account is the current user's account.
-  let preferences = {};
-  let account = userAccount;
-  let courseCertificates = null;
 
   try {
     yield put(fetchProfileBegin());
 
-    // Depending on which profile we're loading, we need to make different calls.
-    const calls = [
-      isPreview
-        ? call(ProfileApiService.getAccount, username, { sharedView: true })
-        : call(ProfileApiService.getAccount, username),
+    // The profile is read-only for everyone (the owner sees exactly what the
+    // public sees), so always request the shared view -- the fields any logged-in
+    // user is allowed to see. Preferences are fetched only to compute the
+    // certificate gate below; they are never rendered.
+    const [account, courseCertificatesResult, preferences] = yield all([
+      call(ProfileApiService.getAccount, username, { sharedView: true }),
       call(ProfileApiService.getCourseCertificates, username),
-    ];
+      call(ProfileApiService.getPreferences, username),
+    ]);
 
-    if (isAuthenticatedUserProfile || isPreview) {
-      // If the profile is for the current user, get their preferences.
-      // We don't need them for other users. In preview mode they are only
-      // used below to decide certificate visibility, never rendered.
-      calls.push(call(ProfileApiService.getPreferences, username));
-    }
+    // The certificates API only exposes a user's certificates to others when
+    // visibility.course_certificates is explicitly all_users
+    // (IsOwnerOrPublicCertificates in edx-platform); mirror that check here so
+    // the page shows the certificate list a visitor would get.
+    const courseCertificates = preferences.visibilityCourseCertificates === 'all_users'
+      ? courseCertificatesResult
+      : [];
 
-    // Make all the calls in parallel.
-    const result = yield all(calls);
-
-    if (isAuthenticatedUserProfile || isPreview) {
-      [account, courseCertificates, preferences] = result;
-    } else {
-      [account, courseCertificates] = result;
-    }
-
-    if (isPreview) {
-      // The certificates API only exposes another user's certificates when
-      // visibility.course_certificates is explicitly all_users
-      // (IsOwnerOrPublicCertificates in edx-platform); mirror that check here
-      // so the preview shows the certificate list a visitor would get.
-      if (preferences.visibilityCourseCertificates !== 'all_users') {
-        courseCertificates = [];
-      }
-      // Visitors cannot read preferences, so render with the same empty set.
-      preferences = {};
-    }
-
-    // Set initial visibility values for account
-    // Set account_privacy as custom is necessary so that when viewing another user's profile,
-    // their full name is displayed and change visibility forms are worked correctly
-    if (isAuthenticatedUserProfile && result[0].accountPrivacy === 'all_users') {
-      yield call(ProfileApiService.patchPreferences, action.payload.username, {
-        account_privacy: 'custom',
-        'visibility.name': 'all_users',
-        'visibility.bio': 'all_users',
-        'visibility.course_certificates': 'all_users',
-        'visibility.country': 'all_users',
-        'visibility.date_joined': 'all_users',
-        'visibility.level_of_education': 'all_users',
-        'visibility.language_proficiencies': 'all_users',
-        'visibility.social_links': 'all_users',
-        'visibility.time_zone': 'all_users',
-      });
-    }
-
+    // Visitors cannot read preferences, so render with an empty set.
     yield put(fetchProfileSuccess(
       account,
-      preferences,
+      {},
       courseCertificates,
-      isAuthenticatedUserProfile,
+      false,
     ));
 
     yield put(fetchProfileReset());
   } catch (e) {
     if (e.response.status === 404) {
       if (e.processedData && e.processedData.fieldErrors) {
-        yield put(saveProfileFailure(e.processedData.fieldErrors));
+        yield put(fetchProfileFailure(e.processedData.fieldErrors));
       } else {
-        yield put(saveProfileFailure(e.customAttributes));
+        yield put(fetchProfileFailure(e.customAttributes));
       }
     } else {
       throw e;
@@ -139,122 +59,6 @@ export function* handleFetchProfile(action) {
   }
 }
 
-export function* handleSaveProfile(action) {
-  try {
-    const { drafts, preferences } = yield select(handleSaveProfileSelector);
-
-    const accountDrafts = pick(drafts, [
-      'bio',
-      'courseCertificates',
-      'country',
-      'levelOfEducation',
-      'languageProficiencies',
-      'name',
-      'socialLinks',
-    ]);
-
-    const preferencesDrafts = pick(drafts, [
-      'visibilityBio',
-      'visibilityCourseCertificates',
-      'visibilityCountry',
-      'visibilityLevelOfEducation',
-      'visibilityLanguageProficiencies',
-      'visibilityName',
-      'visibilitySocialLinks',
-    ]);
-
-    // The visibility <select> doesn't fire onChange when the user re-picks the value
-    // already shown (an unset visibility.<field> is displayed as its effective default,
-    // e.g. "Everyone"), so the saved form may carry no visibility draft even though the
-    // user expects that value persisted. Persist the edited form's effective visibility so
-    // "what you see is saved". Skip private accounts so we never silently un-private one.
-    const visibilityKey = VISIBILITY_DRAFT_KEY_BY_FORM_ID[action.payload.formId];
-    if (
-      visibilityKey
-      && preferencesDrafts[visibilityKey] === undefined
-      && preferences.accountPrivacy !== 'private'
-    ) {
-      preferencesDrafts[visibilityKey] = preferences[visibilityKey] || 'all_users';
-    }
-
-    if (Object.keys(preferencesDrafts).length > 0) {
-      preferencesDrafts.accountPrivacy = 'custom';
-    }
-
-    yield put(saveProfileBegin());
-    let accountResult = null;
-    // Build the visibility drafts into a structure the API expects.
-
-    if (Object.keys(accountDrafts).length > 0) {
-      accountResult = yield call(
-        ProfileApiService.patchProfile,
-        action.payload.username,
-        accountDrafts,
-      );
-    }
-
-    let preferencesResult = preferences; // assume it hasn't changed.
-    if (Object.keys(preferencesDrafts).length > 0) {
-      yield call(ProfileApiService.patchPreferences, action.payload.username, preferencesDrafts);
-      // TODO: Temporary deoptimization since the patchPreferences call doesn't return anything.
-      // Remove this second call once we can get a result from the one above.
-      preferencesResult = yield call(ProfileApiService.getPreferences, action.payload.username);
-    }
-
-    // The account result is returned from the server.
-    // The preferences draft is valid if the server didn't complain, so
-    // pass it through directly.
-    yield put(saveProfileSuccess(accountResult, preferencesResult));
-    yield delay(1000);
-    yield put(closeForm(action.payload.formId));
-    yield delay(300);
-    yield put(saveProfileReset());
-    yield put(resetDrafts());
-  } catch (e) {
-    if (e.processedData && e.processedData.fieldErrors) {
-      yield put(saveProfileFailure(e.processedData.fieldErrors));
-    } else {
-      yield put(saveProfileReset());
-      throw e;
-    }
-  }
-}
-
-export function* handleSaveProfilePhoto(action) {
-  const { username, formData } = action.payload;
-
-  try {
-    yield put(saveProfilePhotoBegin());
-    const photoResult = yield call(ProfileApiService.postProfilePhoto, username, formData);
-    yield put(saveProfilePhotoSuccess(photoResult));
-    yield put(saveProfilePhotoReset());
-  } catch (e) {
-    if (e.processedData) {
-      yield put(saveProfilePhotoFailure(e.processedData));
-    } else {
-      yield put(saveProfilePhotoReset());
-      throw e;
-    }
-  }
-}
-
-export function* handleDeleteProfilePhoto(action) {
-  const { username } = action.payload;
-
-  try {
-    yield put(deleteProfilePhotoBegin());
-    const photoResult = yield call(ProfileApiService.deleteProfilePhoto, username);
-    yield put(deleteProfilePhotoSuccess(photoResult));
-    yield put(deleteProfilePhotoReset());
-  } catch (e) {
-    yield put(deleteProfilePhotoReset());
-    throw e;
-  }
-}
-
 export default function* profileSaga() {
   yield takeEvery(FETCH_PROFILE.BASE, handleFetchProfile);
-  yield takeEvery(SAVE_PROFILE.BASE, handleSaveProfile);
-  yield takeEvery(SAVE_PROFILE_PHOTO.BASE, handleSaveProfilePhoto);
-  yield takeEvery(DELETE_PROFILE_PHOTO.BASE, handleDeleteProfilePhoto);
 }

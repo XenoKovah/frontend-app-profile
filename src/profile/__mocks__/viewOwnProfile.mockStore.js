@@ -48,9 +48,7 @@ module.exports = {
   profilePage: {
     errors: {},
     saveState: null,
-    savePhotoState: null,
-    currentlyEditingField: null,
-    isAuthenticatedUserProfile: true,
+    isAuthenticatedUserProfile: false,
     account: {
       mailingAddress: null,
       profileImage: {
@@ -124,7 +122,6 @@ module.exports = {
         createdDate: '2019-03-04T19:31:39.896806Z'
       }
     ],
-    drafts: {},
     isLoadingProfile: false
   },
   router: {

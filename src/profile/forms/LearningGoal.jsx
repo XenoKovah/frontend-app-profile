@@ -17,7 +17,7 @@ import SwitchContent from './elements/SwitchContent';
 import { editableFormSelector } from '../data/selectors';
 
 const LearningGoal = (props) => {
-  let { learningGoal, editMode, visibilityLearningGoal } = props;
+  let { learningGoal, editMode } = props;
   const { intl } = props;
 
   if (!learningGoal) {
@@ -28,31 +28,11 @@ const LearningGoal = (props) => {
     editMode = mockData.editMode;
   }
 
-  if (!visibilityLearningGoal) {
-    visibilityLearningGoal = mockData.visibilityLearningGoal;
-  }
-
   return (
     <SwitchContent
       className="mb-5"
       expression={editMode}
       cases={{
-        editable: (
-          <>
-            <EditableItemHeader
-              content={intl.formatMessage(messages['profile.learningGoal.learningGoal'])}
-              showVisibility={visibilityLearningGoal !== null}
-              visibility={visibilityLearningGoal}
-            />
-            <p data-hj-suppress className="lead">
-              {intl.formatMessage(get(
-                messages,
-                `profile.learningGoal.options.${learningGoal}`,
-                messages['profile.learningGoal.options.something_else'],
-              ))}
-            </p>
-          </>
-        ),
         static: (
           <>
             <EditableItemHeader content={intl.formatMessage(messages['profile.learningGoal.learningGoal'])} />
@@ -73,8 +53,7 @@ const LearningGoal = (props) => {
 LearningGoal.propTypes = {
   // From Selector
   learningGoal: PropTypes.oneOf(['advance_career', 'start_career', 'learn_something_new', 'something_else']),
-  visibilityLearningGoal: PropTypes.oneOf(['private', 'all_users']),
-  editMode: PropTypes.oneOf(['editable', 'static']),
+  editMode: PropTypes.oneOf(['static']),
 
   // i18n
   intl: intlShape.isRequired,
@@ -83,7 +62,6 @@ LearningGoal.propTypes = {
 LearningGoal.defaultProps = {
   editMode: 'static',
   learningGoal: null,
-  visibilityLearningGoal: 'private',
 };
 
 export default connect(

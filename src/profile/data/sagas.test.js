@@ -2,37 +2,21 @@ import {
   takeEvery,
   put,
   call,
-  delay,
-  select,
   all,
 } from 'redux-saga/effects';
-import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 
 import * as profileActions from './actions';
-import { handleSaveProfileSelector, userAccountSelector } from './selectors';
 
 jest.mock('./services', () => ({
-  getProfile: jest.fn(),
-  patchProfile: jest.fn(),
-  patchPreferences: jest.fn(),
-  postProfilePhoto: jest.fn(),
-  deleteProfilePhoto: jest.fn(),
   getPreferences: jest.fn(),
   getAccount: jest.fn(),
   getCourseCertificates: jest.fn(),
-}));
-
-jest.mock('@edx/frontend-platform/auth', () => ({
-  getAuthenticatedUser: jest.fn(),
 }));
 
 // RootSaga and ProfileApiService must be imported AFTER the mock above.
 /* eslint-disable import/first */
 import profileSaga, {
   handleFetchProfile,
-  handleSaveProfile,
-  handleSaveProfilePhoto,
-  handleDeleteProfilePhoto,
 } from './sagas';
 import * as ProfileApiService from './services';
 /* eslint-enable import/first */
@@ -44,91 +28,20 @@ describe('RootSaga', () => {
 
       expect(gen.next().value)
         .toEqual(takeEvery(profileActions.FETCH_PROFILE.BASE, handleFetchProfile));
-      expect(gen.next().value)
-        .toEqual(takeEvery(profileActions.SAVE_PROFILE.BASE, handleSaveProfile));
-      expect(gen.next().value)
-        .toEqual(takeEvery(profileActions.SAVE_PROFILE_PHOTO.BASE, handleSaveProfilePhoto));
-      expect(gen.next().value)
-        .toEqual(takeEvery(profileActions.DELETE_PROFILE_PHOTO.BASE, handleDeleteProfilePhoto));
 
       expect(gen.next().value).toBeUndefined();
     });
   });
 
   describe('handleFetchProfile', () => {
-    it('should fetch certificates and preferences for the current user profile', () => {
-      const userAccount = {
-        username: 'gonzo',
-        other: 'data',
-      };
-      getAuthenticatedUser.mockReturnValue(userAccount);
-      const selectorData = {
-        userAccount,
-      };
-
+    it('always fetches the shared view, certificates and preferences, even for the owner', () => {
       const action = profileActions.fetchProfile('gonzo');
-      const gen = handleFetchProfile(action);
-
-      const result = [userAccount, [1, 2, 3], { preferences: 'stuff' }];
-
-      expect(gen.next().value).toEqual(select(userAccountSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
-      expect(gen.next().value).toEqual(all([
-        call(ProfileApiService.getAccount, 'gonzo'),
-        call(ProfileApiService.getCourseCertificates, 'gonzo'),
-        call(ProfileApiService.getPreferences, 'gonzo'),
-      ]));
-      expect(gen.next(result).value)
-        .toEqual(put(profileActions.fetchProfileSuccess(userAccount, result[2], result[1], true)));
-      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
-      expect(gen.next().value).toBeUndefined();
-    });
-
-    it('should fetch certificates and profile for some other user profile', () => {
-      const userAccount = {
-        username: 'gonzo',
-        other: 'data',
-      };
-      getAuthenticatedUser.mockReturnValue(userAccount);
-      const selectorData = {
-        userAccount,
-      };
-
-      const action = profileActions.fetchProfile('booyah');
-      const gen = handleFetchProfile(action);
-
-      const result = [{}, [1, 2, 3]];
-
-      expect(gen.next().value).toEqual(select(userAccountSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
-      expect(gen.next().value).toEqual(all([
-        call(ProfileApiService.getAccount, 'booyah'),
-        call(ProfileApiService.getCourseCertificates, 'booyah'),
-      ]));
-      expect(gen.next(result).value)
-        .toEqual(put(profileActions.fetchProfileSuccess(result[0], {}, result[1], false)));
-      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
-      expect(gen.next().value).toBeUndefined();
-    });
-
-    it('should fetch the shared view of the own profile when previewing', () => {
-      const userAccount = {
-        username: 'gonzo',
-        other: 'data',
-      };
-      getAuthenticatedUser.mockReturnValue(userAccount);
-      const selectorData = {
-        userAccount,
-      };
-
-      const action = profileActions.fetchProfile('gonzo', true);
       const gen = handleFetchProfile(action);
 
       const sharedAccount = { username: 'gonzo', bio: 'shared bio' };
       const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'all_users' }];
 
-      expect(gen.next().value).toEqual(select(userAccountSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileBegin()));
       expect(gen.next().value).toEqual(all([
         call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
         call(ProfileApiService.getCourseCertificates, 'gonzo'),
@@ -141,24 +54,14 @@ describe('RootSaga', () => {
       expect(gen.next().value).toBeUndefined();
     });
 
-    it('should hide certificates in preview when they are not visible to everyone', () => {
-      const userAccount = {
-        username: 'gonzo',
-        other: 'data',
-      };
-      getAuthenticatedUser.mockReturnValue(userAccount);
-      const selectorData = {
-        userAccount,
-      };
-
-      const action = profileActions.fetchProfile('gonzo', true);
+    it('hides certificates when they are not visible to everyone', () => {
+      const action = profileActions.fetchProfile('gonzo');
       const gen = handleFetchProfile(action);
 
       const sharedAccount = { username: 'gonzo' };
       const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'private' }];
 
-      expect(gen.next().value).toEqual(select(userAccountSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileBegin()));
       expect(gen.next().value).toEqual(all([
         call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
         call(ProfileApiService.getCourseCertificates, 'gonzo'),
@@ -170,165 +73,45 @@ describe('RootSaga', () => {
       expect(gen.next().value).toBeUndefined();
     });
 
-    it('should ignore preview mode on another user\'s profile', () => {
-      const userAccount = {
-        username: 'gonzo',
-        other: 'data',
-      };
-      getAuthenticatedUser.mockReturnValue(userAccount);
-      const selectorData = {
-        userAccount,
-      };
-
-      const action = profileActions.fetchProfile('booyah', true);
+    it('never patches preferences (the read-only page must not mutate the viewer)', () => {
+      const action = profileActions.fetchProfile('gonzo');
       const gen = handleFetchProfile(action);
 
-      const result = [{}, [1, 2, 3]];
+      // Drive the whole generator and collect every yielded effect.
+      const yields = [];
+      const sharedAccount = { username: 'gonzo', accountPrivacy: 'all_users' };
+      const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'all_users' }];
 
-      expect(gen.next().value).toEqual(select(userAccountSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.fetchProfileBegin()));
-      expect(gen.next().value).toEqual(all([
-        call(ProfileApiService.getAccount, 'booyah'),
-        call(ProfileApiService.getCourseCertificates, 'booyah'),
-      ]));
-      expect(gen.next(result).value)
-        .toEqual(put(profileActions.fetchProfileSuccess(result[0], {}, result[1], false)));
-      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
-      expect(gen.next().value).toBeUndefined();
-    });
-  });
+      let step = gen.next();
+      // Feed the parallel-calls result in when the saga asks for it.
+      yields.push(step.value);
+      step = gen.next(); // fetchProfileBegin -> all([...])
+      yields.push(step.value);
+      step = gen.next(result); // all([...]) -> fetchProfileSuccess
+      while (!step.done) {
+        yields.push(step.value);
+        step = gen.next();
+      }
 
-  describe('handleSaveProfile', () => {
-    const selectorData = {
-      username: 'my username',
-      drafts: {
-        name: 'Full Name',
-      },
-      preferences: {},
-    };
-
-    it('should successfully process a saveProfile request if there are no exceptions', () => {
-      const action = profileActions.saveProfile('ze form id', 'my username');
-      const gen = handleSaveProfile(action);
-      const profile = {
-        name: 'Full Name',
-        levelOfEducation: 'b',
-      };
-      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.saveProfileBegin()));
-      expect(gen.next().value).toEqual(call(ProfileApiService.patchProfile, 'my username', {
-        name: 'Full Name',
-      }));
-      // The library would supply the result of the above call
-      // as the parameter to the NEXT yield.  Here:
-      expect(gen.next(profile).value).toEqual(put(profileActions.saveProfileSuccess(profile, {})));
-      expect(gen.next().value).toEqual(delay(1000));
-      expect(gen.next().value).toEqual(put(profileActions.closeForm('ze form id')));
-      expect(gen.next().value).toEqual(delay(300));
-      expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
-      expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
-      expect(gen.next().value).toBeUndefined();
+      // No yielded effect may reference a patchPreferences service call.
+      const serialized = JSON.stringify(yields);
+      expect(serialized).not.toContain('patchPreferences');
+      // Defensive: the service mock doesn't even expose patchPreferences anymore.
+      expect(ProfileApiService.patchPreferences).toBeUndefined();
     });
 
-    it('persists the edited form visibility from its effective value when left unchanged', () => {
-      // Repro of the "Everyone shows but doesn't save" bug: the user opens the Name form,
-      // leaves the visibility at its displayed default (so no draft is recorded), and saves.
-      const action = profileActions.saveProfile('name', 'my username');
-      const gen = handleSaveProfile(action);
-      const nameSelectorData = {
-        username: 'my username',
-        drafts: {}, // visibility <select> didn't fire onChange -> no draft
-        preferences: { accountPrivacy: 'custom' }, // visibility.name is unset
-      };
-      const updatedPreferences = { accountPrivacy: 'custom', visibilityName: 'all_users' };
+    it('redirects to not found on a 404', () => {
+      const action = profileActions.fetchProfile('ghost');
+      const gen = handleFetchProfile(action);
 
-      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
-      expect(gen.next(nameSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
-      // No account drafts, but the name form's visibility is persisted from its effective value.
-      expect(gen.next().value).toEqual(call(ProfileApiService.patchPreferences, 'my username', {
-        visibilityName: 'all_users',
-        accountPrivacy: 'custom',
-      }));
-      expect(gen.next().value).toEqual(call(ProfileApiService.getPreferences, 'my username'));
-      expect(gen.next(updatedPreferences).value)
-        .toEqual(put(profileActions.saveProfileSuccess(null, updatedPreferences)));
-      expect(gen.next().value).toEqual(delay(1000));
-      expect(gen.next().value).toEqual(put(profileActions.closeForm('name')));
-      expect(gen.next().value).toEqual(delay(300));
-      expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
-      expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
-      expect(gen.next().value).toBeUndefined();
-    });
+      const error = new Error('not found');
+      error.response = { status: 404 };
+      error.customAttributes = { httpErrorStatus: 404 };
 
-    it('persists certificate visibility from its effective value when saved unchanged', () => {
-      // The certificates form is rendered with formId="certificates". Opening it and
-      // clicking Save without touching the dropdown records no draft, so the effective
-      // visibility must be persisted here — otherwise visibility.course_certificates
-      // stays unset and the certs are hidden from other users (the certs API requires
-      // an explicit all_users). Regression guard for the formId/key mismatch.
-      const action = profileActions.saveProfile('certificates', 'my username');
-      const gen = handleSaveProfile(action);
-      const certSelectorData = {
-        username: 'my username',
-        drafts: {}, // visibility <select> didn't fire onChange -> no draft
-        preferences: { accountPrivacy: 'custom' }, // visibility.course_certificates is unset
-      };
-      const updatedPreferences = {
-        accountPrivacy: 'custom',
-        visibilityCourseCertificates: 'all_users',
-      };
-
-      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
-      expect(gen.next(certSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
-      // No account drafts; the certificate visibility is persisted from its effective value.
-      expect(gen.next().value).toEqual(call(ProfileApiService.patchPreferences, 'my username', {
-        visibilityCourseCertificates: 'all_users',
-        accountPrivacy: 'custom',
-      }));
-      expect(gen.next().value).toEqual(call(ProfileApiService.getPreferences, 'my username'));
-      expect(gen.next(updatedPreferences).value)
-        .toEqual(put(profileActions.saveProfileSuccess(null, updatedPreferences)));
-      expect(gen.next().value).toEqual(delay(1000));
-      expect(gen.next().value).toEqual(put(profileActions.closeForm('certificates')));
-      expect(gen.next().value).toEqual(delay(300));
-      expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
-      expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
-      expect(gen.next().value).toBeUndefined();
-    });
-
-    it('does not change visibility for a private account on save', () => {
-      const action = profileActions.saveProfile('name', 'my username');
-      const gen = handleSaveProfile(action);
-      const privateSelectorData = {
-        username: 'my username',
-        drafts: {},
-        preferences: { accountPrivacy: 'private' },
-      };
-
-      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
-      // Private account: no visibility is forced and no preferences patch happens.
-      expect(gen.next(privateSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
-      expect(gen.next().value)
-        .toEqual(put(profileActions.saveProfileSuccess(null, { accountPrivacy: 'private' })));
-    });
-
-    it('should successfully publish a failure action on exception', () => {
-      const error = new Error('uhoh');
-      error.processedData = {
-        fieldErrors: {
-          uhoh: 'not good',
-        },
-      };
-      const action = profileActions.saveProfile(
-        'ze form id',
-        'my username',
-      );
-      const gen = handleSaveProfile(action);
-
-      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
-      expect(gen.next(selectorData).value).toEqual(put(profileActions.saveProfileBegin()));
+      gen.next(); // fetchProfileBegin
+      gen.next(); // all([...])
       const result = gen.throw(error);
-      expect(result.value).toEqual(put(profileActions.saveProfileFailure({ uhoh: 'not good' })));
+      expect(result.value).toEqual(put(profileActions.fetchProfileFailure({ httpErrorStatus: 404 })));
       expect(gen.next().value).toBeUndefined();
     });
   });

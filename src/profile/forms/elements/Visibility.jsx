@@ -30,49 +30,8 @@ Visibility.defaultProps = {
   to: 'private',
 };
 
-const VisibilitySelect = ({ intl, className, ...props }) => {
-  const { value } = props;
-  const icon = value === 'private' ? faEyeSlash : faEye;
-
-  return (
-    <span className={className}>
-      <span className="d-inline-block ml-1 mr-2" style={{ width: '1.5rem' }}>
-        <FontAwesomeIcon icon={icon} />
-      </span>
-      <select className="d-inline-block form-control" {...props}>
-        <option key="private" value="private">
-          {intl.formatMessage(messages['profile.visibility.who.just.me'])}
-        </option>
-        <option key="all_users" value="all_users">
-          {intl.formatMessage(messages['profile.visibility.who.everyone'], { siteName: getConfig().SITE_NAME })}
-        </option>
-      </select>
-    </span>
-  );
-};
-
-VisibilitySelect.propTypes = {
-  id: PropTypes.string,
-  className: PropTypes.string,
-  name: PropTypes.string,
-  value: PropTypes.oneOf(['private', 'all_users']),
-  onChange: PropTypes.func,
-
-  // i18n
-  intl: intlShape.isRequired,
-};
-VisibilitySelect.defaultProps = {
-  id: null,
-  className: null,
-  name: 'visibility',
-  value: null,
-  onChange: null,
-};
-
 const intlVisibility = injectIntl(Visibility);
-const intlVisibilitySelect = injectIntl(VisibilitySelect);
 
 export {
   intlVisibility as Visibility,
-  intlVisibilitySelect as VisibilitySelect,
 };

@@ -48,8 +48,6 @@ module.exports = {
   profilePage: {
     errors: {},
     saveState: null,
-    savePhotoState: null,
-    currentlyEditingField: null,
     isAuthenticatedUserProfile: false,
     account: {
       mailingAddress: null,
@@ -83,7 +81,6 @@ module.exports = {
     },
     preferences: {},
     courseCertificates: [],
-    drafts: {},
     isLoadingProfile: false,
     learningGoal: 'advance_career',
   },

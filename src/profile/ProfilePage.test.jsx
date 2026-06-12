@@ -20,16 +20,9 @@ const storeMocks = {
   invalidUser: require('./__mocks__/invalidUser.mockStore'),
   viewOwnProfile: require('./__mocks__/viewOwnProfile.mockStore'),
   viewOtherProfile: require('./__mocks__/viewOtherProfile.mockStore'),
-  savingEditedBio: require('./__mocks__/savingEditedBio.mockStore'),
 };
 const requiredProfilePageProps = {
-  fetchUserAccount: () => {},
   fetchProfile: () => {},
-  saveProfile: () => {},
-  saveProfilePhoto: () => {},
-  deleteProfilePhoto: () => {},
-  openField: () => {},
-  closeField: () => {},
   params: { username: 'staff' },
 };
 
@@ -67,27 +60,23 @@ beforeEach(() => {
   analytics.sendTrackingLogEvent.mockReset();
 });
 
-const ProfileWrapper = ({ params, requiresParentalConsent, isPreview }) => {
+const ProfileWrapper = ({ params }) => {
   const navigate = useNavigate();
   return (
     <ProfilePage
       {...requiredProfilePageProps}
       params={params}
-      requiresParentalConsent={requiresParentalConsent}
       navigate={navigate}
-      isPreview={isPreview}
     />
   );
 };
 
 ProfileWrapper.propTypes = {
   params: PropTypes.shape({}).isRequired,
-  requiresParentalConsent: PropTypes.bool.isRequired,
-  isPreview: PropTypes.bool.isRequired,
 };
 
 const ProfilePageWrapper = ({
-  contextValue, store, params, requiresParentalConsent, isPreview,
+  contextValue, store, params,
 }) => (
   <AppContext.Provider
     value={contextValue}
@@ -95,11 +84,7 @@ const ProfilePageWrapper = ({
     <IntlProvider locale="en">
       <Provider store={store}>
         <BrowserRouter>
-          <ProfileWrapper
-            params={params}
-            requiresParentalConsent={requiresParentalConsent}
-            isPreview={isPreview}
-          />
+          <ProfileWrapper params={params} />
         </BrowserRouter>
       </Provider>
     </IntlProvider>
@@ -108,16 +93,12 @@ const ProfilePageWrapper = ({
 
 ProfilePageWrapper.defaultProps = {
   params: { username: 'staff' },
-  requiresParentalConsent: null,
-  isPreview: false,
 };
 
 ProfilePageWrapper.propTypes = {
   contextValue: PropTypes.shape({}).isRequired,
   store: PropTypes.shape({}).isRequired,
   params: PropTypes.shape({}),
-  requiresParentalConsent: PropTypes.bool,
-  isPreview: PropTypes.bool,
 };
 
 describe('<ProfilePage />', () => {
@@ -179,32 +160,17 @@ describe('<ProfilePage />', () => {
               },
             },
           })}
-          match={{ params: { username: 'verified' } }} // Override default match
+          params={{ username: 'verified' }}
         />
       );
       const { container: tree } = render(component);
       expect(tree).toMatchSnapshot();
     });
 
-    it('viewing own profile in public preview mode', () => {
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      // Preview renders with visitor-shaped redux state (the saga stores the
-      // shared account data and isAuthenticatedUserProfile: false).
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeMocks.viewOtherProfile)}
-          isPreview
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('preview mode shows the exit banner and hides owner controls', () => {
+    it('owner sees the read-only public view (no edit buttons, no preview link)', () => {
+      // The owner now sees exactly what the public sees: the page renders with
+      // visitor-shaped state (isAuthenticatedUserProfile false) and there are no
+      // edit affordances or "/preview" link anywhere on the page.
       const contextValue = {
         authenticatedUser: { userId: 123, username: 'staff', administrator: true },
         config: getConfig(),
@@ -212,173 +178,21 @@ describe('<ProfilePage />', () => {
       const { container } = render(
         <ProfilePageWrapper
           contextValue={contextValue}
-          store={mockStore(storeMocks.viewOtherProfile)}
-          isPreview
+          store={mockStore(storeMocks.viewOwnProfile)}
         />,
       );
 
-      expect(
-        screen.getByText('This is a preview of how your profile appears to other signed-in users.'),
-      ).toBeTruthy();
-      // Guard against the react-intl "<unknown>" token that appears when a
-      // message references a placeholder/tag with no matching value.
-      expect(screen.queryByText(/<unknown>/)).toBeNull();
-      expect(container.querySelector('a[href="/u/staff"]')).toBeTruthy();
+      // No edit pencils / form controls.
+      expect(screen.queryByRole('button', { name: /edit/i })).toBeNull();
+      expect(screen.queryByText('Edit')).toBeNull();
+      // No "View what public sees" / preview affordance.
+      expect(screen.queryByText('View what public sees')).toBeNull();
       expect(container.querySelector('a[href="/u/staff/preview"]')).toBeNull();
-    });
-
-    it('own profile shows the public preview button', () => {
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const { container } = render(
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeMocks.viewOwnProfile)}
-        />,
-      );
-
-      expect(container.querySelector('a[href="/u/staff/preview"]')).toBeTruthy();
-    });
-
-    it('while saving an edited bio', () => {
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeMocks.savingEditedBio)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('while saving an edited bio with error', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.savingEditedBio));
-      storeData.profilePage.errors.bio = { userMessage: 'bio error' };
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('test country edit with error', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.savingEditedBio));
-      storeData.profilePage.errors.country = { userMessage: 'country error' };
-      storeData.profilePage.currentlyEditingField = 'country';
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('test education edit with error', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.savingEditedBio));
-      storeData.profilePage.errors.levelOfEducation = { userMessage: 'education error' };
-      storeData.profilePage.currentlyEditingField = 'levelOfEducation';
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('test preferreded language edit with error', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.savingEditedBio));
-      storeData.profilePage.errors.languageProficiencies = { userMessage: 'preferred language error' };
-      storeData.profilePage.currentlyEditingField = 'languageProficiencies';
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-
-    it('without credentials service', () => {
-      const config = getConfig();
-      config.CREDENTIALS_BASE_URL = '';
-
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: getConfig(),
-      };
-      const component = (
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeMocks.viewOwnProfile)}
-        />
-      );
-      const { container: tree } = render(component);
-      expect(tree).toMatchSnapshot();
-    });
-    it('test age message alert', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.viewOwnProfile));
-      storeData.userAccount.requiresParentalConsent = true;
-      storeData.profilePage.account.requiresParentalConsent = true;
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: { ...getConfig(), COLLECT_YEAR_OF_BIRTH: true },
-      };
-      const { container } = render(
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-          requiresParentalConsent
-        />,
-      );
-
-      expect(container.querySelector('.alert-info')).toHaveClass('show');
-    });
-    it('test photo error alert', () => {
-      const storeData = JSON.parse(JSON.stringify(storeMocks.viewOwnProfile));
-      storeData.profilePage.errors.photo = { userMessage: 'error' };
-      const contextValue = {
-        authenticatedUser: { userId: 123, username: 'staff', administrator: true },
-        config: { ...getConfig(), COLLECT_YEAR_OF_BIRTH: true },
-      };
-      const { container } = render(
-        <ProfilePageWrapper
-          contextValue={contextValue}
-          store={mockStore(storeData)}
-          requiresParentalConsent
-        />,
-      );
-
-      expect(container.querySelector('.alert-danger')).toHaveClass('show');
+      // No photo upload/remove controls.
+      expect(screen.queryByText('Upload Photo')).toBeNull();
+      expect(screen.queryByText('Remove')).toBeNull();
+      // No "who can see this" visibility selector.
+      expect(container.querySelector('#visibilityName')).toBeNull();
     });
   });
 

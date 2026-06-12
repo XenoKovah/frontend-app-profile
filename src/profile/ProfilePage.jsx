@@ -1,25 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 
 import { sendTrackingLogEvent } from '@edx/frontend-platform/analytics';
 import { ensureConfig, getConfig } from '@edx/frontend-platform';
 import { AppContext } from '@edx/frontend-platform/react';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
-import { Alert, Hyperlink } from '@openedx/paragon';
 import { PluginSlot } from '@openedx/frontend-plugin-framework';
 
 // Actions
-import {
-  fetchProfile,
-  saveProfile,
-  saveProfilePhoto,
-  deleteProfilePhoto,
-  openForm,
-  closeForm,
-  updateDraft,
-} from './data/actions';
+import { fetchProfile } from './data/actions';
 
 // Components
 import ProfileAvatar from './forms/ProfileAvatar';
@@ -30,7 +20,6 @@ import Education from './forms/Education';
 import SocialLinks from './forms/SocialLinks';
 import Bio from './forms/Bio';
 import Certificates from './forms/Certificates';
-import AgeMessage from './AgeMessage';
 import DateJoined from './DateJoined';
 import UsernameDescription from './UsernameDescription';
 import PageLoading from './PageLoading';
@@ -48,52 +37,11 @@ import withParams from '../utils/hoc';
 ensureConfig(['CREDENTIALS_BASE_URL', 'LMS_BASE_URL'], 'ProfilePage');
 
 class ProfilePage extends React.Component {
-  constructor(props, context) {
-    super(props, context);
-
-    const credentialsBaseUrl = context.config.CREDENTIALS_BASE_URL;
-    this.state = {
-      viewMyRecordsUrl: credentialsBaseUrl ? `${credentialsBaseUrl}/records` : null,
-      accountSettingsUrl: context.config.ACCOUNT_SETTINGS_URL,
-    };
-
-    this.handleSaveProfilePhoto = this.handleSaveProfilePhoto.bind(this);
-    this.handleDeleteProfilePhoto = this.handleDeleteProfilePhoto.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleOpen = this.handleOpen.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
   componentDidMount() {
-    this.props.fetchProfile(this.props.params.username, this.props.isPreview);
+    this.props.fetchProfile(this.props.params.username);
     sendTrackingLogEvent('edx.profile.viewed', {
       username: this.props.params.username,
     });
-  }
-
-  handleSaveProfilePhoto(formData) {
-    this.props.saveProfilePhoto(this.context.authenticatedUser.username, formData);
-  }
-
-  handleDeleteProfilePhoto() {
-    this.props.deleteProfilePhoto(this.context.authenticatedUser.username);
-  }
-
-  handleClose(formId) {
-    this.props.closeForm(formId);
-  }
-
-  handleOpen(formId) {
-    this.props.openForm(formId);
-  }
-
-  handleSubmit(formId) {
-    this.props.saveProfile(formId, this.context.authenticatedUser.username);
-  }
-
-  handleChange(name, value) {
-    this.props.updateDraft(name, value);
   }
 
   isYOBDisabled() {
@@ -102,65 +50,6 @@ class ProfilePage extends React.Component {
     const isAgeOrNotCompliant = !yearOfBirth || ((currentYear - yearOfBirth) < 13);
 
     return isAgeOrNotCompliant && getConfig().COLLECT_YEAR_OF_BIRTH !== 'true';
-  }
-
-  isOwnProfile() {
-    return this.props.params.username === this.context.authenticatedUser.username;
-  }
-
-  // In preview mode the page renders your own profile as a visitor would see
-  // it, so everything keyed off "is this my profile" must behave as "no".
-  isAuthenticatedUserProfile() {
-    return !this.props.isPreview && this.isOwnProfile();
-  }
-
-  isPreviewingOwnProfile() {
-    return this.props.isPreview && this.isOwnProfile();
-  }
-
-  // Inserted into the DOM in two places (for responsive layout)
-  renderViewMyRecordsButton() {
-    if (!(this.state.viewMyRecordsUrl && this.isAuthenticatedUserProfile())) {
-      return null;
-    }
-
-    return (
-      <Hyperlink className="btn btn-primary" destination={this.state.viewMyRecordsUrl} target="_blank">
-        {this.props.intl.formatMessage(messages['profile.viewMyRecords'])}
-      </Hyperlink>
-    );
-  }
-
-  // Inserted into the DOM in two places (for responsive layout)
-  renderViewPublicProfileButton() {
-    if (!this.isAuthenticatedUserProfile()) {
-      return null;
-    }
-
-    return (
-      <Link className="btn btn-outline-primary" to={`/u/${this.props.params.username}/preview`}>
-        {this.props.intl.formatMessage(messages['profile.preview.button'])}
-      </Link>
-    );
-  }
-
-  renderPreviewBanner() {
-    if (!this.isPreviewingOwnProfile()) {
-      return null;
-    }
-
-    return (
-      <div className="profile-preview-banner container-fluid pt-3 d-flex justify-content-end">
-        <Alert variant="info" className="mb-0">
-          <div className="d-flex align-items-center flex-wrap">
-            <span>{this.props.intl.formatMessage(messages['profile.preview.banner'])}</span>
-            <Link className="btn btn-primary btn-sm ml-3 flex-shrink-0" to={`/u/${this.props.params.username}`}>
-              {this.props.intl.formatMessage(messages['profile.preview.exit'])}
-            </Link>
-          </div>
-        </Alert>
-      </div>
-    );
   }
 
   // Inserted into the DOM in two places (for responsive layout)
@@ -177,34 +66,6 @@ class ProfilePage extends React.Component {
     );
   }
 
-  renderPhotoUploadErrorMessage() {
-    const { photoUploadError } = this.props;
-
-    if (photoUploadError === null) {
-      return null;
-    }
-
-    return (
-      <div className="row">
-        <div className="col-md-4 col-lg-3">
-          <Alert variant="danger" dismissible={false} show>
-            {photoUploadError.userMessage}
-          </Alert>
-        </div>
-      </div>
-    );
-  }
-
-  renderAgeMessage() {
-    const { requiresParentalConsent } = this.props;
-    const shouldShowAgeMessage = requiresParentalConsent && this.isAuthenticatedUserProfile();
-
-    if (!shouldShowAgeMessage) {
-      return null;
-    }
-    return <AgeMessage accountSettingsUrl={this.state.accountSettingsUrl} />;
-  }
-
   renderContent() {
     const {
       profileImage,
@@ -215,7 +76,6 @@ class ProfilePage extends React.Component {
       levelOfEducation,
       visibilityLevelOfEducation,
       socialLinks,
-      draftSocialLinksByPlatform,
       visibilitySocialLinks,
       learningGoal,
       visibilityLearningGoal,
@@ -225,7 +85,6 @@ class ProfilePage extends React.Component {
       visibilityCourseCertificates,
       bio,
       visibilityBio,
-      requiresParentalConsent,
       isLoadingProfile,
       username,
       saveState,
@@ -240,15 +99,9 @@ class ProfilePage extends React.Component {
       navigate('/notfound');
     }
 
-    const commonFormProps = {
-      openHandler: this.handleOpen,
-      closeHandler: this.handleClose,
-      submitHandler: this.handleSubmit,
-      changeHandler: this.handleChange,
-    };
-
-    const isBlockVisible = (blockInfo) => this.isAuthenticatedUserProfile()
-      || (!this.isAuthenticatedUserProfile() && Boolean(blockInfo));
+    // The profile is read-only and only ever shows the public view, so a block is
+    // visible exactly when it has a value to show.
+    const isBlockVisible = (blockInfo) => Boolean(blockInfo);
 
     const isLanguageBlockVisible = isBlockVisible(languageProficiencies.length);
     const isEducationBlockVisible = isBlockVisible(levelOfEducation);
@@ -267,10 +120,6 @@ class ProfilePage extends React.Component {
                 className="mb-md-3"
                 src={profileImage.src}
                 isDefault={profileImage.isDefault}
-                onSave={this.handleSaveProfilePhoto}
-                onDelete={this.handleDeleteProfilePhoto}
-                savePhotoState={this.props.savePhotoState}
-                isEditable={this.isAuthenticatedUserProfile() && !requiresParentalConsent}
               />
             </div>
           </div>
@@ -278,30 +127,18 @@ class ProfilePage extends React.Component {
             <div className="d-md-none">
               {this.renderHeadingLockup()}
             </div>
-            <div className="d-none d-md-block float-right">
-              {this.renderViewMyRecordsButton()}
-              {' '}
-              {this.renderViewPublicProfileButton()}
-            </div>
           </div>
         </div>
-        {this.renderPhotoUploadErrorMessage()}
         <div className="row">
           <div className="col-md-4 col-lg-4">
             <div className="d-none d-md-block mb-4">
               {this.renderHeadingLockup()}
-            </div>
-            <div className="d-md-none mb-4">
-              {this.renderViewMyRecordsButton()}
-              {' '}
-              {this.renderViewPublicProfileButton()}
             </div>
             {isNameBlockVisible && (
               <Name
                 name={name}
                 visibilityName={visibilityName}
                 formId="name"
-                {...commonFormProps}
               />
             )}
             {isLocationBlockVisible && (
@@ -309,7 +146,6 @@ class ProfilePage extends React.Component {
                 country={country}
                 visibilityCountry={visibilityCountry}
                 formId="country"
-                {...commonFormProps}
               />
             )}
             {isLanguageBlockVisible && (
@@ -317,7 +153,6 @@ class ProfilePage extends React.Component {
                 languageProficiencies={languageProficiencies}
                 visibilityLanguageProficiencies={visibilityLanguageProficiencies}
                 formId="languageProficiencies"
-                {...commonFormProps}
               />
             )}
             {isEducationBlockVisible && (
@@ -325,16 +160,13 @@ class ProfilePage extends React.Component {
                 levelOfEducation={levelOfEducation}
                 visibilityLevelOfEducation={visibilityLevelOfEducation}
                 formId="levelOfEducation"
-                {...commonFormProps}
               />
             )}
             {isSocialLinksBLockVisible && (
               <SocialLinks
                 socialLinks={socialLinks}
-                draftSocialLinksByPlatform={draftSocialLinksByPlatform}
                 visibilitySocialLinks={visibilitySocialLinks}
                 formId="socialLinks"
-                {...commonFormProps}
               />
             )}
             <div className="mb-4">
@@ -342,13 +174,11 @@ class ProfilePage extends React.Component {
             </div>
           </div>
           <div className="pt-md-3 col-md-8 col-lg-7 offset-lg-1">
-            {!this.isYOBDisabled() && this.renderAgeMessage()}
             {isBioBlockVisible && (
               <Bio
                 bio={bio}
                 visibilityBio={visibilityBio}
                 formId="bio"
-                {...commonFormProps}
               />
             )}
             {getConfig().ENABLE_SKILLS_BUILDER_PROFILE && (
@@ -356,14 +186,12 @@ class ProfilePage extends React.Component {
                 learningGoal={learningGoal}
                 visibilityLearningGoal={visibilityLearningGoal}
                 formId="learningGoal"
-                {...commonFormProps}
               />
             )}
             {isCertificatesBlockVisible && (
               <Certificates
                 visibilityCourseCertificates={visibilityCourseCertificates}
                 formId="certificates"
-                {...commonFormProps}
               />
             )}
           </div>
@@ -376,7 +204,6 @@ class ProfilePage extends React.Component {
     return (
       <div className="profile-page">
         <Banner />
-        {this.renderPreviewBanner()}
         {this.renderContent()}
       </div>
     );
@@ -387,7 +214,6 @@ ProfilePage.contextType = AppContext;
 
 ProfilePage.propTypes = {
   // Account data
-  requiresParentalConsent: PropTypes.bool,
   dateJoined: PropTypes.string,
   username: PropTypes.string,
 
@@ -425,10 +251,6 @@ ProfilePage.propTypes = {
     platform: PropTypes.string,
     socialLink: PropTypes.string,
   })),
-  draftSocialLinksByPlatform: PropTypes.objectOf(PropTypes.shape({
-    platform: PropTypes.string,
-    socialLink: PropTypes.string,
-  })),
   visibilitySocialLinks: PropTypes.string.isRequired,
 
   // Learning Goal form data
@@ -441,27 +263,16 @@ ProfilePage.propTypes = {
     isDefault: PropTypes.bool,
   }),
   saveState: PropTypes.oneOf([null, 'pending', 'complete', 'error']),
-  savePhotoState: PropTypes.oneOf([null, 'pending', 'complete', 'error']),
   isLoadingProfile: PropTypes.bool.isRequired,
-
-  // Page state helpers
-  photoUploadError: PropTypes.objectOf(PropTypes.string),
 
   // Actions
   fetchProfile: PropTypes.func.isRequired,
-  saveProfile: PropTypes.func.isRequired,
-  saveProfilePhoto: PropTypes.func.isRequired,
-  deleteProfilePhoto: PropTypes.func.isRequired,
-  openForm: PropTypes.func.isRequired,
-  closeForm: PropTypes.func.isRequired,
-  updateDraft: PropTypes.func.isRequired,
   navigate: PropTypes.func.isRequired,
 
   // Router
   params: PropTypes.shape({
     username: PropTypes.string.isRequired,
   }).isRequired,
-  isPreview: PropTypes.bool,
 
   // i18n
   intl: intlShape.isRequired,
@@ -470,33 +281,22 @@ ProfilePage.propTypes = {
 ProfilePage.defaultProps = {
   saveState: null,
   username: '',
-  savePhotoState: null,
-  photoUploadError: {},
   profileImage: {},
   name: null,
   yearOfBirth: null,
   levelOfEducation: null,
   country: null,
   socialLinks: [],
-  draftSocialLinksByPlatform: {},
   bio: null,
   learningGoal: null,
   languageProficiencies: [],
   courseCertificates: null,
-  requiresParentalConsent: null,
   dateJoined: null,
-  isPreview: false,
 };
 
 export default connect(
   profilePageSelector,
   {
     fetchProfile,
-    saveProfilePhoto,
-    deleteProfilePhoto,
-    saveProfile,
-    openForm,
-    closeForm,
-    updateDraft,
   },
 )(injectIntl(withParams(ProfilePage)));

@@ -10,7 +10,6 @@ import get from 'lodash.get';
 import messages from './Certificates.messages';
 
 // Components
-import FormControls from './elements/FormControls';
 import EditableItemHeader from './elements/EditableItemHeader';
 import SwitchContent from './elements/SwitchContent';
 
@@ -22,33 +21,6 @@ import verifiedCertificateSVG from '../assets/verified-certificate.svg';
 import { certificatesSelector } from '../data/selectors';
 
 class Certificates extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.handleOpen = this.handleOpen.bind(this);
-  }
-
-  handleChange(e) {
-    const { name, value } = e.target;
-    this.props.changeHandler(name, value);
-  }
-
-  handleSubmit(e) {
-    e.preventDefault();
-    this.props.submitHandler(this.props.formId);
-  }
-
-  handleClose() {
-    this.props.closeHandler(this.props.formId);
-  }
-
-  handleOpen() {
-    this.props.openHandler(this.props.formId);
-  }
-
   renderCertificate({
     certificateType, courseDisplayName, courseOrganization, modifiedDate, downloadUrl, courseId,
   }) {
@@ -130,70 +102,13 @@ class Certificates extends React.Component {
   }
 
   render() {
-    const {
-      visibilityCourseCertificates, editMode, saveState, intl,
-    } = this.props;
+    const { editMode, intl } = this.props;
 
     return (
       <SwitchContent
         className="mb-4"
         expression={editMode}
         cases={{
-          editing: (
-            <div role="dialog" aria-labelledby="course-certificates-label">
-              <form onSubmit={this.handleSubmit}>
-                {/*
-                  Keep the header wrapped so the FormControls <div> is not the
-                  immediate sibling of .editable-item-header. The brand override
-                  `.editable-item-header + div button { position: absolute }`
-                  (meant for header action buttons) would otherwise match the
-                  FormControls Save/Cancel buttons — this is the only place a
-                  FormControls div directly follows an EditableItemHeader — pull
-                  them out of flow, and overlap Save on top of Cancel at the top
-                  right instead of leaving them at the bottom like every other
-                  field. Every other field nests its header inside a wrapper too.
-                */}
-                <div className="certificates-edit-header">
-                  <EditableItemHeader
-                    headingId="course-certificates-label"
-                    content={intl.formatMessage(messages['profile.certificates.my.certificates'])}
-                  />
-                </div>
-                <FormControls
-                  visibilityId="visibilityCourseCertificates"
-                  saveState={saveState}
-                  visibility={visibilityCourseCertificates}
-                  cancelHandler={this.handleClose}
-                  changeHandler={this.handleChange}
-                />
-                {this.renderCertificates()}
-              </form>
-            </div>
-          ),
-          editable: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.certificates.my.certificates'])}
-                showEditButton
-                onClickEdit={this.handleOpen}
-                showVisibility={visibilityCourseCertificates !== null}
-                visibility={visibilityCourseCertificates}
-              />
-              {this.renderCertificates()}
-            </>
-          ),
-          empty: (
-            <>
-              <EditableItemHeader
-                content={intl.formatMessage(messages['profile.certificates.my.certificates'])}
-                showEditButton
-                onClickEdit={this.handleOpen}
-                showVisibility={visibilityCourseCertificates !== null}
-                visibility={visibilityCourseCertificates}
-              />
-              {this.renderCertificates()}
-            </>
-          ),
           static: (
             <>
               <EditableItemHeader content={intl.formatMessage(messages['profile.certificates.my.certificates'])} />
@@ -207,25 +122,11 @@ class Certificates extends React.Component {
 }
 
 Certificates.propTypes = {
-  // It'd be nice to just set this as a defaultProps...
-  // except the class that comes out on the other side of react-redux's
-  // connect() method won't have it anymore. Static properties won't survive
-  // through the higher order function.
-  formId: PropTypes.string.isRequired,
-
   // From Selector
   certificates: PropTypes.arrayOf(PropTypes.shape({
     title: PropTypes.string,
   })),
-  visibilityCourseCertificates: PropTypes.oneOf(['private', 'all_users']),
-  editMode: PropTypes.oneOf(['editing', 'editable', 'empty', 'static']),
-  saveState: PropTypes.string,
-
-  // Actions
-  changeHandler: PropTypes.func.isRequired,
-  submitHandler: PropTypes.func.isRequired,
-  closeHandler: PropTypes.func.isRequired,
-  openHandler: PropTypes.func.isRequired,
+  editMode: PropTypes.oneOf(['static']),
 
   // i18n
   intl: intlShape.isRequired,
@@ -233,8 +134,6 @@ Certificates.propTypes = {
 
 Certificates.defaultProps = {
   editMode: 'static',
-  saveState: null,
-  visibilityCourseCertificates: 'private',
   certificates: null,
 };
 

@@ -54,30 +54,6 @@ describe('routes', () => {
     expect(screen.getByText('Profile page')).toBeTruthy();
   });
 
-  test('Profile preview page should redirect for unauthenticated users', () => {
-    getLoginRedirectUrl.mockClear();
-    render(
-      RoutesWithProvider(unauthenticatedUser, '/u/edx/preview'),
-    );
-    expect(getLoginRedirectUrl).toHaveBeenCalled();
-  });
-
-  test('Profile preview page should be accessible for authenticated users', () => {
-    render(
-      RoutesWithProvider(
-        {
-          authenticatedUser: {
-            username: 'edx',
-            email: 'edx@example.com',
-          },
-          config: getConfig(),
-        },
-        '/u/edx/preview',
-      ),
-    );
-    expect(screen.getByText('Profile page')).toBeTruthy();
-  });
-
   test('should show NotFound page for a bad route', () => {
     render(
       RoutesWithProvider(unauthenticatedUser, '/nonMatchingRoute'),

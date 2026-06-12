@@ -11,65 +11,18 @@ export const formIdSelector = (state, props) => props.formId;
 export const userAccountSelector = state => state.userAccount;
 
 export const profileAccountSelector = state => state.profilePage.account;
-export const profileDraftsSelector = state => state.profilePage.drafts;
 export const accountPrivacySelector = state => state.profilePage.preferences.accountPrivacy;
 export const profilePreferencesSelector = state => state.profilePage.preferences;
 export const profileCourseCertificatesSelector = state => state.profilePage.courseCertificates;
-export const profileAccountDraftsSelector = state => state.profilePage.accountDrafts;
-export const profileVisibilityDraftsSelector = state => state.profilePage.visibilityDrafts;
 export const saveStateSelector = state => state.profilePage.saveState;
-export const savePhotoStateSelector = state => state.profilePage.savePhotoState;
 export const isLoadingProfileSelector = state => state.profilePage.isLoadingProfile;
-export const currentlyEditingFieldSelector = state => state.profilePage.currentlyEditingField;
 export const accountErrorsSelector = state => state.profilePage.errors;
-export const isAuthenticatedUserProfileSelector = state => state.profilePage.isAuthenticatedUserProfile;
+// The profile is read-only for everyone (the owner sees exactly what the public
+// sees), so no form is ever editable.
+export const isAuthenticatedUserProfileSelector = () => false;
 
-export const editableFormModeSelector = createSelector(
-  profileAccountSelector,
-  isAuthenticatedUserProfileSelector,
-  profileCourseCertificatesSelector,
-  formIdSelector,
-  currentlyEditingFieldSelector,
-  (account, isAuthenticatedUserProfile, certificates, formId, currentlyEditingField) => {
-    // If the prop doesn't exist, that means it hasn't been set (for the current user's profile)
-    // or is being hidden from us (for other users' profiles)
-    let propExists = account[formId] != null && account[formId].length > 0;
-    propExists = formId === 'certificates' ? certificates.length > 0 : propExists; // overwrite for certificates
-    // If this isn't the current user's profile
-    if (!isAuthenticatedUserProfile) {
-      return 'static';
-    }
-    // the current user has no age set / under 13 ...
-    if (account.requiresParentalConsent) {
-      // then there are only two options: static or nothing.
-      // We use 'null' as a return value because the consumers of
-      // getMode render nothing at all on a mode of null.
-      return propExists ? 'static' : null;
-    }
-    // Otherwise, if this is the current user's profile...
-    if (formId === currentlyEditingField) {
-      return 'editing';
-    }
-
-    if (!propExists) {
-      return 'empty';
-    }
-
-    return 'editable';
-  },
-);
-
-export const accountDraftsFieldSelector = createSelector(
-  formIdSelector,
-  profileDraftsSelector,
-  (formId, drafts) => drafts[formId],
-);
-
-export const visibilityDraftsFieldSelector = createSelector(
-  formIdSelector,
-  profileVisibilityDraftsSelector,
-  (formId, visibilityDrafts) => visibilityDrafts[formId],
-);
+// Every form renders read-only.
+export const editableFormModeSelector = () => 'static';
 
 // Note: Error messages are delivered from the server
 // localized according to a user's account settings
@@ -157,18 +110,6 @@ export const profileImageSelector = createSelector(
     : {}),
 );
 
-/**
- * This is used by a saga to pull out data to process.
- */
-export const handleSaveProfileSelector = createSelector(
-  profileDraftsSelector,
-  profilePreferencesSelector,
-  (drafts, preferences) => ({
-    drafts,
-    preferences,
-  }),
-);
-
 // Reformats the social links in a platform-keyed hash.
 const socialLinksByPlatformSelector = createSelector(
   profileAccountSelector,
@@ -183,37 +124,19 @@ const socialLinksByPlatformSelector = createSelector(
   },
 );
 
-const draftSocialLinksByPlatformSelector = createSelector(
-  profileDraftsSelector,
-  (drafts) => {
-    const linksByPlatform = {};
-    if (Array.isArray(drafts.socialLinks)) {
-      drafts.socialLinks.forEach((socialLink) => {
-        linksByPlatform[socialLink.platform] = socialLink;
-      });
-    }
-    return linksByPlatform;
-  },
-);
-
-// Fleshes out our list of existing social links with all the other ones the user can set.
+// Fleshes out our list of existing social links with all the other ones the profile can have.
 export const formSocialLinksSelector = createSelector(
   socialLinksByPlatformSelector,
-  draftSocialLinksByPlatformSelector,
-  (linksByPlatform, draftLinksByPlatform) => {
+  (linksByPlatform) => {
     const knownPlatforms = ['blog', 'linkedin', 'github', 'gitlab', 'mastodon', 'bluesky', 'twitter', 'discord'];
     const socialLinks = [];
     // For each known platform
     knownPlatforms.forEach((platform) => {
-      // If the link is in our drafts.
-      if (draftLinksByPlatform[platform] !== undefined) {
-        // Use the draft one.
-        socialLinks.push(draftLinksByPlatform[platform]);
-      } else if (linksByPlatform[platform] !== undefined) {
-        // Otherwise use the real one.
+      if (linksByPlatform[platform] !== undefined) {
+        // Use the real one.
         socialLinks.push(linksByPlatform[platform]);
       } else {
-        // And if it's not in either, use a stub.
+        // And if it's not present, use a stub.
         socialLinks.push({
           platform,
           socialLink: null,
@@ -268,49 +191,26 @@ export const visibilitiesSelector = createSelector(
   },
 );
 
-/**
- * If there's no draft present at all (undefined), use the original committed value.
- */
-function chooseFormValue(draft, committed) {
-  return draft !== undefined ? draft : committed;
-}
-
 export const formValuesSelector = createSelector(
   profileAccountSelector,
   visibilitiesSelector,
-  profileDraftsSelector,
   profileCourseCertificatesSelector,
   formSocialLinksSelector,
-  (account, visibilities, drafts, courseCertificates, socialLinks) => ({
-    bio: chooseFormValue(drafts.bio, account.bio),
-    visibilityBio: chooseFormValue(drafts.visibilityBio, visibilities.visibilityBio),
+  (account, visibilities, courseCertificates, socialLinks) => ({
+    bio: account.bio,
+    visibilityBio: visibilities.visibilityBio,
     courseCertificates,
-    visibilityCourseCertificates: chooseFormValue(
-      drafts.visibilityCourseCertificates,
-      visibilities.visibilityCourseCertificates,
-    ),
-    country: chooseFormValue(drafts.country, account.country),
-    visibilityCountry: chooseFormValue(drafts.visibilityCountry, visibilities.visibilityCountry),
-    levelOfEducation: chooseFormValue(drafts.levelOfEducation, account.levelOfEducation),
-    visibilityLevelOfEducation: chooseFormValue(
-      drafts.visibilityLevelOfEducation,
-      visibilities.visibilityLevelOfEducation,
-    ),
-    languageProficiencies: chooseFormValue(
-      drafts.languageProficiencies,
-      account.languageProficiencies,
-    ),
-    visibilityLanguageProficiencies: chooseFormValue(
-      drafts.visibilityLanguageProficiencies,
-      visibilities.visibilityLanguageProficiencies,
-    ),
-    name: chooseFormValue(drafts.name, account.name),
-    visibilityName: chooseFormValue(drafts.visibilityName, visibilities.visibilityName),
+    visibilityCourseCertificates: visibilities.visibilityCourseCertificates,
+    country: account.country,
+    visibilityCountry: visibilities.visibilityCountry,
+    levelOfEducation: account.levelOfEducation,
+    visibilityLevelOfEducation: visibilities.visibilityLevelOfEducation,
+    languageProficiencies: account.languageProficiencies,
+    visibilityLanguageProficiencies: visibilities.visibilityLanguageProficiencies,
+    name: account.name,
+    visibilityName: visibilities.visibilityName,
     socialLinks, // Social links is calculated in its own selector, since it's complicated.
-    visibilitySocialLinks: chooseFormValue(
-      drafts.visibilitySocialLinks,
-      visibilities.visibilitySocialLinks,
-    ),
+    visibilitySocialLinks: visibilities.visibilitySocialLinks,
   }),
 );
 
@@ -319,24 +219,17 @@ export const profilePageSelector = createSelector(
   formValuesSelector,
   profileImageSelector,
   saveStateSelector,
-  savePhotoStateSelector,
   isLoadingProfileSelector,
-  draftSocialLinksByPlatformSelector,
-  accountErrorsSelector,
   (
     account,
     formValues,
     profileImage,
     saveState,
-    savePhotoState,
     isLoadingProfile,
-    draftSocialLinksByPlatform,
-    errors,
   ) => ({
     // Account data we need
     username: account.username,
     profileImage,
-    requiresParentalConsent: account.requiresParentalConsent,
     dateJoined: account.dateJoined,
     yearOfBirth: account.yearOfBirth,
 
@@ -367,12 +260,9 @@ export const profilePageSelector = createSelector(
     // Social links form data
     socialLinks: formValues.socialLinks,
     visibilitySocialLinks: formValues.visibilitySocialLinks,
-    draftSocialLinksByPlatform,
 
     // Other data we need
     saveState,
-    savePhotoState,
     isLoadingProfile,
-    photoUploadError: errors.photo || null,
   }),
 );

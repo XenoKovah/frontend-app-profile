@@ -18,17 +18,14 @@ module.exports = {
   profilePage: {
     errors: {},
     saveState: null,
-    savePhotoState: null,
-    currentlyEditingField: null,
     account: {
       username: 'staff',
       socialLinks: []
     },
     preferences: {},
     courseCertificates: [],
-    drafts: {},
     isLoadingProfile: true,
-    isAuthenticatedUserProfile: true,
+    isAuthenticatedUserProfile: false,
   },
   router: {
     location: {

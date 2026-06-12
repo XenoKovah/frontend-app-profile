@@ -10,7 +10,6 @@ import { AppContext } from '@edx/frontend-platform/react';
 import messages from '../../i18n';
 
 import viewOwnProfileMockStore from '../__mocks__/viewOwnProfile.mockStore';
-import savingEditedBioMockStore from '../__mocks__/savingEditedBio.mockStore';
 
 import LearningGoal from './LearningGoal';
 
@@ -60,32 +59,6 @@ LearningGoalWrapper.defaultProps = {
 };
 
 LearningGoalWrapper.propTypes = {
-  store: PropTypes.shape({}),
-};
-
-const LearningGoalWrapperWithStore = ({ store }) => {
-  const contextValue = useMemo(() => ({
-    authenticatedUser: { userId: null, username: null, administrator: false },
-    config: getConfig(),
-  }), []);
-  return (
-    <AppContext.Provider
-      value={contextValue}
-    >
-      <IntlProvider locale="en">
-        <Provider store={mockStore(store)}>
-          <LearningGoal {...requiredLearningGoalProps} formId="learningGoal" />
-        </Provider>
-      </IntlProvider>
-    </AppContext.Provider>
-  );
-};
-
-LearningGoalWrapperWithStore.defaultProps = {
-  store: mockStore(savingEditedBioMockStore),
-};
-
-LearningGoalWrapperWithStore.propTypes = {
   store: PropTypes.shape({}),
 };
 
