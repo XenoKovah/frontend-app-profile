@@ -260,6 +260,42 @@ describe('RootSaga', () => {
       expect(gen.next().value).toBeUndefined();
     });
 
+    it('persists certificate visibility from its effective value when saved unchanged', () => {
+      // The certificates form is rendered with formId="certificates". Opening it and
+      // clicking Save without touching the dropdown records no draft, so the effective
+      // visibility must be persisted here — otherwise visibility.course_certificates
+      // stays unset and the certs are hidden from other users (the certs API requires
+      // an explicit all_users). Regression guard for the formId/key mismatch.
+      const action = profileActions.saveProfile('certificates', 'my username');
+      const gen = handleSaveProfile(action);
+      const certSelectorData = {
+        username: 'my username',
+        drafts: {}, // visibility <select> didn't fire onChange -> no draft
+        preferences: { accountPrivacy: 'custom' }, // visibility.course_certificates is unset
+      };
+      const updatedPreferences = {
+        accountPrivacy: 'custom',
+        visibilityCourseCertificates: 'all_users',
+      };
+
+      expect(gen.next().value).toEqual(select(handleSaveProfileSelector));
+      expect(gen.next(certSelectorData).value).toEqual(put(profileActions.saveProfileBegin()));
+      // No account drafts; the certificate visibility is persisted from its effective value.
+      expect(gen.next().value).toEqual(call(ProfileApiService.patchPreferences, 'my username', {
+        visibilityCourseCertificates: 'all_users',
+        accountPrivacy: 'custom',
+      }));
+      expect(gen.next().value).toEqual(call(ProfileApiService.getPreferences, 'my username'));
+      expect(gen.next(updatedPreferences).value)
+        .toEqual(put(profileActions.saveProfileSuccess(null, updatedPreferences)));
+      expect(gen.next().value).toEqual(delay(1000));
+      expect(gen.next().value).toEqual(put(profileActions.closeForm('certificates')));
+      expect(gen.next().value).toEqual(delay(300));
+      expect(gen.next().value).toEqual(put(profileActions.saveProfileReset()));
+      expect(gen.next().value).toEqual(put(profileActions.resetDrafts()));
+      expect(gen.next().value).toBeUndefined();
+    });
+
     it('does not change visibility for a private account on save', () => {
       const action = profileActions.saveProfile('name', 'my username');
       const gen = handleSaveProfile(action);

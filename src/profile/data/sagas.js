@@ -36,7 +36,11 @@ import * as ProfileApiService from './services';
 // Maps a profile form id to the visibility-preference draft key it controls.
 const VISIBILITY_DRAFT_KEY_BY_FORM_ID = {
   bio: 'visibilityBio',
-  courseCertificates: 'visibilityCourseCertificates',
+  // The certificates form is rendered with formId="certificates" (see ProfilePage),
+  // not "courseCertificates" — keep this key in sync or the "persist what you see on
+  // Save" behavior below never fires for certificate visibility, leaving
+  // visibility.course_certificates unset and the certs hidden from other users.
+  certificates: 'visibilityCourseCertificates',
   country: 'visibilityCountry',
   levelOfEducation: 'visibilityLevelOfEducation',
   languageProficiencies: 'visibilityLanguageProficiencies',
