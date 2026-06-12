@@ -142,10 +142,23 @@ class Certificates extends React.Component {
           editing: (
             <div role="dialog" aria-labelledby="course-certificates-label">
               <form onSubmit={this.handleSubmit}>
-                <EditableItemHeader
-                  headingId="course-certificates-label"
-                  content={intl.formatMessage(messages['profile.certificates.my.certificates'])}
-                />
+                {/*
+                  Keep the header wrapped so the FormControls <div> is not the
+                  immediate sibling of .editable-item-header. The brand override
+                  `.editable-item-header + div button { position: absolute }`
+                  (meant for header action buttons) would otherwise match the
+                  FormControls Save/Cancel buttons — this is the only place a
+                  FormControls div directly follows an EditableItemHeader — pull
+                  them out of flow, and overlap Save on top of Cancel at the top
+                  right instead of leaving them at the bottom like every other
+                  field. Every other field nests its header inside a wrapper too.
+                */}
+                <div className="certificates-edit-header">
+                  <EditableItemHeader
+                    headingId="course-certificates-label"
+                    content={intl.formatMessage(messages['profile.certificates.my.certificates'])}
+                  />
+                </div>
                 <FormControls
                   visibilityId="visibilityCourseCertificates"
                   saveState={saveState}
