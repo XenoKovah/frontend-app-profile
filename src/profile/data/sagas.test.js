@@ -4,6 +4,7 @@ import {
   call,
   all,
 } from 'redux-saga/effects';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 
 import * as profileActions from './actions';
 
@@ -11,6 +12,10 @@ jest.mock('./services', () => ({
   getPreferences: jest.fn(),
   getAccount: jest.fn(),
   getCourseCertificates: jest.fn(),
+}));
+
+jest.mock('@edx/frontend-platform/auth', () => ({
+  getAuthenticatedUser: jest.fn(),
 }));
 
 // RootSaga and ProfileApiService must be imported AFTER the mock above.
@@ -34,7 +39,8 @@ describe('RootSaga', () => {
   });
 
   describe('handleFetchProfile', () => {
-    it('always fetches the shared view, certificates and preferences, even for the owner', () => {
+    it('owner: fetches shared view + certs + preferences and gates certs to the public view', () => {
+      getAuthenticatedUser.mockReturnValue({ username: 'gonzo' });
       const action = profileActions.fetchProfile('gonzo');
       const gen = handleFetchProfile(action);
 
@@ -42,6 +48,7 @@ describe('RootSaga', () => {
       const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'all_users' }];
 
       expect(gen.next().value).toEqual(put(profileActions.fetchProfileBegin()));
+      // The owner can read their own preferences, so all three calls are made.
       expect(gen.next().value).toEqual(all([
         call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
         call(ProfileApiService.getCourseCertificates, 'gonzo'),
@@ -54,7 +61,8 @@ describe('RootSaga', () => {
       expect(gen.next().value).toBeUndefined();
     });
 
-    it('hides certificates when they are not visible to everyone', () => {
+    it('owner: hides certificates that are not shared with everyone', () => {
+      getAuthenticatedUser.mockReturnValue({ username: 'gonzo' });
       const action = profileActions.fetchProfile('gonzo');
       const gen = handleFetchProfile(action);
 
@@ -73,7 +81,29 @@ describe('RootSaga', () => {
       expect(gen.next().value).toBeUndefined();
     });
 
+    it('visitor: does not fetch preferences (would 403) and trusts the certificates API', () => {
+      getAuthenticatedUser.mockReturnValue({ username: 'someone-else' });
+      const action = profileActions.fetchProfile('gonzo');
+      const gen = handleFetchProfile(action);
+
+      const sharedAccount = { username: 'gonzo', bio: 'shared bio' };
+      const result = [sharedAccount, [1, 2, 3]];
+
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileBegin()));
+      // Only two calls for a non-owner -- no getPreferences (it would 403).
+      expect(gen.next().value).toEqual(all([
+        call(ProfileApiService.getAccount, 'gonzo', { sharedView: true }),
+        call(ProfileApiService.getCourseCertificates, 'gonzo'),
+      ]));
+      // The certs API already returned only publicly-shared certs, so pass through as-is.
+      expect(gen.next(result).value)
+        .toEqual(put(profileActions.fetchProfileSuccess(sharedAccount, {}, [1, 2, 3], false)));
+      expect(gen.next().value).toEqual(put(profileActions.fetchProfileReset()));
+      expect(gen.next().value).toBeUndefined();
+    });
+
     it('never patches preferences (the read-only page must not mutate the viewer)', () => {
+      getAuthenticatedUser.mockReturnValue({ username: 'gonzo' });
       const action = profileActions.fetchProfile('gonzo');
       const gen = handleFetchProfile(action);
 
@@ -83,7 +113,6 @@ describe('RootSaga', () => {
       const result = [sharedAccount, [1, 2, 3], { visibilityCourseCertificates: 'all_users' }];
 
       let step = gen.next();
-      // Feed the parallel-calls result in when the saga asks for it.
       yields.push(step.value);
       step = gen.next(); // fetchProfileBegin -> all([...])
       yields.push(step.value);
@@ -101,6 +130,7 @@ describe('RootSaga', () => {
     });
 
     it('redirects to not found on a 404', () => {
+      getAuthenticatedUser.mockReturnValue({ username: 'gonzo' });
       const action = profileActions.fetchProfile('ghost');
       const gen = handleFetchProfile(action);
 

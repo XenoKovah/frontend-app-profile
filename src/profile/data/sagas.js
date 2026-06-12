@@ -4,6 +4,7 @@ import {
   put,
   takeEvery,
 } from 'redux-saga/effects';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import {
   fetchProfileBegin,
   fetchProfileFailure,
@@ -15,29 +16,33 @@ import * as ProfileApiService from './services';
 
 export function* handleFetchProfile(action) {
   const { username } = action.payload;
+  const isOwnProfile = username === getAuthenticatedUser().username;
 
   try {
     yield put(fetchProfileBegin());
 
-    // The profile is read-only for everyone (the owner sees exactly what the
-    // public sees), so always request the shared view -- the fields any logged-in
-    // user is allowed to see. Preferences are fetched only to compute the
-    // certificate gate below; they are never rendered.
-    const [account, courseCertificatesResult, preferences] = yield all([
+    // The profile is read-only for everyone (the owner sees exactly what the public
+    // sees), so always request the shared view -- the fields any logged-in user may
+    // see. Only the owner can read their own preferences (the preferences API is
+    // IsUserInUrlOrStaff), and they're needed solely to gate certificates: that API
+    // returns the OWNER their own certs regardless of visibility, so for the owner we
+    // hide them unless explicitly shared. Every other viewer already gets only the
+    // publicly-shared certs from the certs API, so we trust it as-is and skip
+    // preferences -- fetching them would 403 for a non-owner and break the page.
+    const calls = [
       call(ProfileApiService.getAccount, username, { sharedView: true }),
       call(ProfileApiService.getCourseCertificates, username),
-      call(ProfileApiService.getPreferences, username),
-    ]);
+    ];
+    if (isOwnProfile) {
+      calls.push(call(ProfileApiService.getPreferences, username));
+    }
+    const [account, courseCertificatesResult, preferences = {}] = yield all(calls);
 
-    // The certificates API only exposes a user's certificates to others when
-    // visibility.course_certificates is explicitly all_users
-    // (IsOwnerOrPublicCertificates in edx-platform); mirror that check here so
-    // the page shows the certificate list a visitor would get.
-    const courseCertificates = preferences.visibilityCourseCertificates === 'all_users'
-      ? courseCertificatesResult
-      : [];
+    const courseCertificates = isOwnProfile && preferences.visibilityCourseCertificates !== 'all_users'
+      ? []
+      : courseCertificatesResult;
 
-    // Visitors cannot read preferences, so render with an empty set.
+    // Preferences are never rendered -- only used for the certificate gate above.
     yield put(fetchProfileSuccess(
       account,
       {},
