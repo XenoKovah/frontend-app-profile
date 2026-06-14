@@ -31,6 +31,15 @@ class Country extends React.Component {
       return <p data-hj-suppress className="h5">{countryName}</p>;
     }
 
+    // Link the location to its per-country leaderboard only when the RGG gamification
+    // UI is enabled (RGG_STUDENT_UI_VISIBLE, delivered to every MFE via MFE_CONFIG).
+    // When RGG is disabled the leaderboard isn't available, so render plain text.
+    const flag = getConfig().RGG_STUDENT_UI_VISIBLE;
+    const rggEnabled = flag === true || flag === 'true';
+    if (!rggEnabled) {
+      return <p data-hj-suppress className="h5">{countryName}</p>;
+    }
+
     const leaderboardUrl = `${getConfig().LMS_BASE_URL}/gamma_dashboard/leaderboard/country/${country}`;
     return (
       <p data-hj-suppress className="h5">
