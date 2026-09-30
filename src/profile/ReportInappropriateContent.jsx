@@ -6,7 +6,7 @@ import { FormattedMessage } from '@edx/frontend-platform/i18n';
 // The report form is a server-rendered LMS page (it needs the LMS session/CSRF and sends
 // the email), so this is a plain link rather than an in-MFE route.
 const ReportInappropriateContent = ({ username }) => (
-  <p className="mb-3 report-inappropriate-content">
+  <p className="small mb-3 report-inappropriate-content">
     <a
       className="report-inappropriate-content__link"
       href={`${getConfig().LMS_BASE_URL}/report-user/${encodeURIComponent(username)}/`}
