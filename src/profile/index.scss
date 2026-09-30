@@ -57,6 +57,18 @@
     display: block !important;
   }
 
+  // "Report inappropriate content": same size/colour as the "Member since" line above it,
+  // so the link must not pick up the default link colour.
+  .report-inappropriate-content__link {
+    color: inherit;
+
+    &:hover,
+    &:focus {
+      color: inherit;
+      text-decoration: underline;
+    }
+  }
+
   .edit-section-header {
     @extend .h6;
     display: block;

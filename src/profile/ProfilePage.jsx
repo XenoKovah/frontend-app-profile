@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 import { sendTrackingLogEvent } from '@edx/frontend-platform/analytics';
 import { ensureConfig, getConfig } from '@edx/frontend-platform';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import { AppContext } from '@edx/frontend-platform/react';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import { PluginSlot } from '@openedx/frontend-plugin-framework';
@@ -21,6 +22,7 @@ import SocialLinks from './forms/SocialLinks';
 import Bio from './forms/Bio';
 import Certificates from './forms/Certificates';
 import DateJoined from './DateJoined';
+import ReportInappropriateContent from './ReportInappropriateContent';
 import UsernameDescription from './UsernameDescription';
 import PageLoading from './PageLoading';
 import Banner from './Banner';
@@ -50,6 +52,11 @@ class ProfilePage extends React.Component {
     const isAgeOrNotCompliant = !yearOfBirth || ((currentYear - yearOfBirth) < 13);
 
     return isAgeOrNotCompliant && getConfig().COLLECT_YEAR_OF_BIRTH !== 'true';
+  }
+
+  isOwnProfile() {
+    const viewer = getAuthenticatedUser();
+    return Boolean(viewer) && viewer.username === this.props.params.username;
   }
 
   // Inserted into the DOM in two places (for responsive layout)
@@ -134,6 +141,9 @@ class ProfilePage extends React.Component {
             <div className="d-none d-md-block mb-4">
               {this.renderHeadingLockup()}
             </div>
+            {!this.isOwnProfile() && (
+              <ReportInappropriateContent username={this.props.params.username} />
+            )}
             {isNameBlockVisible && (
               <Name
                 name={name}
