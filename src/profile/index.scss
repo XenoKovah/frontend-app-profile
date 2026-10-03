@@ -57,15 +57,31 @@
     display: block !important;
   }
 
-  // "Report inappropriate content": same size/colour as the "Member since" line above it,
-  // so the link must not pick up the default link colour.
-  .report-inappropriate-content__link {
-    color: inherit;
+  // "Report inappropriate content" must look exactly like the "Member since" line beside the
+  // avatar. The Indigo brand styles that <p> only through its avatar-row lockup rule
+  // (`.row.align-items-center .d-md-none p`: 12px/16px, #515661, #dddfe2 in dark mode), which
+  // this paragraph sits outside of, so left alone it renders at the 18px body size in the blue
+  // link colour. Mirror those values here; if the brand changes that rule, change these with it.
+  .report-inappropriate-content {
+    color: #515661;
+    font-size: 12px;
+    line-height: 16px;
 
-    &:hover,
-    &:focus {
+    @at-root body.indigo-dark-theme & {
+      color: #dddfe2;
+    }
+
+    // `>` plus the extra class outrank the brand's `p > a[href]:not(.btn)` link colour and its
+    // :hover state, which would otherwise win on specificity.
+    > .report-inappropriate-content__link {
       color: inherit;
       text-decoration: underline;
+
+      &:hover,
+      &:focus {
+        color: inherit;
+        text-decoration: underline;
+      }
     }
   }
 
