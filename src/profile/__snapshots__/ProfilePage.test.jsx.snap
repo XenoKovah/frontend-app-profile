@@ -654,7 +654,7 @@ exports[`<ProfilePage /> Renders correctly in various states viewing own profile
                 <h2
                   class="edit-section-header"
                 >
-                  Social Links
+                  Web Links
                 </h2>
               </div>
               <ul

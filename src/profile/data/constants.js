@@ -12,7 +12,7 @@ const EDUCATION_LEVELS = [
 
 const SOCIAL = {
   blog: {
-    title: 'Blog',
+    title: 'Personal website',
   },
   linkedin: {
     title: 'LinkedIn',

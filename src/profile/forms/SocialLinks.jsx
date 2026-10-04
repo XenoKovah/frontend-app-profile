@@ -20,7 +20,7 @@ import { editableFormSelector } from '../data/selectors';
 const platformDisplayInfo = {
   blog: {
     icon: faGlobe,
-    name: 'Blog',
+    name: 'Personal website',
   },
   linkedin: {
     icon: faLinkedin,

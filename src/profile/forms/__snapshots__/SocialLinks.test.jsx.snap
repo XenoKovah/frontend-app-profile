@@ -14,7 +14,7 @@ exports[`<SocialLinks /> renders the set links read-only 1`] = `
         <h2
           class="edit-section-header"
         >
-          Social Links
+          Web Links
         </h2>
       </div>
       <ul
